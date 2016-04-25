@@ -65,6 +65,9 @@ def selectRecv(bufferSize):
 BUFFER_SIZE = 1024
 
 # Extract arguments
+if (len(argv) < 3):
+	print "Usage: python Agent.py -p [port number]"
+	exit()
 script, portFlag, portnumString = argv
 portnum = int(portnumString)			# Where game engine is listening
 

@@ -29,7 +29,7 @@ def readView():
 			if (i != 2 or j != 2):
 				viewJ.append(agentsocket.recv(1))
 			else:
-				viewJ.append('')
+				viewJ.append('')	# agent
 		viewI.append(viewJ)
 	return viewI
 
@@ -65,6 +65,7 @@ def selectRecv(bufferSize):
 BUFFER_SIZE = 1024
 
 # Extract arguments
+if (len(argv) < 3)
 script, portFlag, portnumString = argv
 portnum = int(portnumString)			# Where game engine is listening
 
