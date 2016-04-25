@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+#########################################################
+#  agent.py
+#  Agent for Text-Based Adventure Game
+#  COMP3411 Artificial Intelligence
+#  UNSW Session 1, 2016
+#  Written by: Ian Wong
+#  Date: 26/04/2016
+#########################################################
+
+import socket
+from sys import argv
+
+BUFFER_SIZE = 1024
+
+# Extract arguments
+script, portFlag, portnumString = argv
+portnum = int(portnumString)			# Where game engine is listening
+
+# Create the TCP socket
+agentsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to the game engine via localhost
+print "Connecting to game engine" % server_name
+try:
+	agentsocket.connect(('Localhost', portnum))
+except socket.error, e:
+	print "Error connecting to server: %s" % e
+	exit()
+
+# Obtain the data
+msg = agentsocket.recv(BUFFER_SIZE)
+print "Message received:"
+print msg
