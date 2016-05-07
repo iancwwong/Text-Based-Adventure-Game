@@ -17,6 +17,11 @@ from sys import argv
 # ---------------------------
 
 class Agent(object):
+
+	# Constants
+	
+	# Mapping of actions to keywords
+	action = {}
 	
 	def __init__(self, portnum):
 		# Create the TCP socket
@@ -34,6 +39,9 @@ class Agent(object):
 		# Prepare the view
 		self.view = []
 
+		# Prepare the action list
+		
+
 	# Run the main procedure of the agent
 	def run(self):
 		while (self.conn_alive):
@@ -49,6 +57,8 @@ class Agent(object):
 
 				# Send the input
 				self.processInput(userInput)
+
+				# 
 
 				print ""	# formatting
 
