@@ -107,26 +107,27 @@ class Gameboard(object):
 		elif (self.direction == self.DIRECTION_LEFT):
 			correctedView = self.rotateView(self.rotateView(self.rotateView(view)))
 
-		return
+		print "Corrected view:"
+		self.showView(correctedView)
+
+		print "Portion of map to update:"
+		print "From (%d, %d) to (%d, %d)" %(self.curr_position['y'] - 2, self.curr_position['x'] - 2, \
+							self.curr_position['y'] + 2, self.curr_position['x'] + 2)
+
+		#return
 
 		# Overwrite the portion of the map using the corrected view
 		# ie the 24 squares around the agent's new current position
 		#	[ (currpos.x - 2, currpos.y - 2), (currpos.x + 2, currpos.y + 2) ]
+		viewrow = 0										# row index of view
 		for maprow in range(self.curr_position['y'] - 2, self.curr_position['y'] + 3):		# row index of actual map
-			viewrow = 0									# row index of view
+			viewcol = 0									# col index of view
 			for mapcol in range(self.curr_position['x'] - 2, self.curr_position['x'] + 3):	# col index of actual map
-				viewcol = 0								# col index of view	
-			
+
 				# Check for player position in view  at (2,2)
 				if (viewrow != 2 or viewcol != 2):
 					# Overwrite the tile with the corresponding one provided in view
-					try:
 						self.gamemap[maprow][mapcol] = view[viewrow][viewcol]
-					except IndexError:
-						print "Error with updating coordinates at:"
-						print "	map (%d, %d)" % (maprow, mapcol)
-						print "	view (%d, %d)" % (viewrow, viewcol)
-						exit()
 				viewcol += 1
 			viewrow += 1
 				
