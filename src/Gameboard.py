@@ -61,18 +61,17 @@ class Gameboard(object):
 
 		if(self.direction == self.DIRECTION_UP):
 			if(y - 2 < 0):
-				## extend
+				self.expandTop()
 		if(self.direction == self.DIRECTION_DOWN):
 			if(y + 2 > len(self.gamemap)):
-				## extend
+				self.expandBottom()
 		if(self.direction == self.DIRECTION_LEFT):
 			if(x - 2 < 0):
-				## extend
+				self.expandLeft()
 		if(self.direction == self.DIRECTION_RIGHT):
 			if(x + 2 > len(self.gamemap[x]):
-				## extend
+				self.expandRight()
 
-		# update position
 
 	def action_left(self, view):
 		self.direction = (self.direction - 1) % 4
@@ -115,6 +114,7 @@ class Gameboard(object):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
 		print "+-----+"
+
 	def expandRight(self):
 		numRow = len(self.gamemap)
 		for i in range(0,numRow):
@@ -124,14 +124,15 @@ class Gameboard(object):
 		numRow = len(self.gamemap)
 		for i in range(0,numRow):
 			self.gamemap[i] = ["?"] + self.gamemap[i]
+		self.curr_position.x += 1
 
-	## [?] + [currentlist ... ]
 	def expandTop(self):
 		newYRow = []
 		numCol = len(self.gamemap[0])
 		for i in range(0,numCol):
 			newYRow.append('?')
 		self.gamemap.insert(0, newYRow)
+		self.curr_position.y += 1
 
 	def expandBottom(self):
 		newYRow = []
