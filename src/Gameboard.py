@@ -7,14 +7,16 @@ import sys
 class Gameboard(object):
 
 	# Constants	
-	DIRECTION_UP = 1
+	DIRECTION_UP = 0
+	DIRECTION_RIGHT = 1
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
-	DIRECTION_LEFT = 4
 
 	# Attributes
-	gamemap = []
+	gamemap = [] # global view of the map (explored so far)
 	direction = 0
+
+	curr_position = {"x": 2, "y": 2}
 	
 	# Constructor
 	def __init__(self):
@@ -26,6 +28,8 @@ class Gameboard(object):
 			"c": action_chop, 
 			"u": action_unlock
 		};
+		self.curr_position.x = 2
+		self.curr_position.y = 2
 		pass
 
 	# Update the map given a view
@@ -34,20 +38,74 @@ class Gameboard(object):
 		if (action == 'init'):
 			self.gamemap = newview
 		else:
-			self.actions[action]();
+			self.actions[action](newview);
 		
+	def action_foward(self, view):
+		x = self.curr_position.x
+		y = self.curr_position.y
 
-			## *nods head* 
-	def action_foward(self):
-        
-	def action_left(self):
+		if(self.direction == self.DIRECTION_UP):
+			y = y - 1
+		if(self.direction == self.DIRECTION_DOWN):
+			y = y + 1
+		if(self.direction == self.DIRECTION_LEFT):
+			x = x - 1
+		if(self.direction == self.DIRECTION_RIGHT):
+			x = x + 1
+		self.gamemap[x][y] = view[2][2]
+		self.gamemap[x-1][y] = view[1][2]
+		self.gamemap[x+1][y] = view[3][2]
+		self.gamemap[x][y-1] = view[2][1]
+		self.gamemap[x][y+1] = view[2][3]
 
-	def action_right(self):
 
-	def action_chop(self):
+		if(self.direction == self.DIRECTION_UP):
+			if(y - 2 < 0):
+				## extend
+		if(self.direction == self.DIRECTION_DOWN):
+			if(y + 2 > len(self.gamemap)):
+				## extend
+		if(self.direction == self.DIRECTION_LEFT):
+			if(x - 2 < 0):
+				## extend
+		if(self.direction == self.DIRECTION_RIGHT):
+			if(x + 2 > len(self.gamemap[x]):
+				## extend
 
-	def action_unlock(self):
+		# update position
 
+	def action_left(self, view):
+		self.direction = (self.direction - 1) % 4
+
+	def action_right(self, view):
+		self.direction = (self.direction + 1) % 4
+
+	def action_chop(self, view):
+		# look at curr postion and update area around it
+		tree_pos = {"x": self.curr_position.x, "y": self.curr_position.y}
+		if(self.direction == self.DIRECTION_UP):
+			tree_pos.y = tree_pos.y - 1
+		if(self.direction == self.DIRECTION_DOWN):
+			tree_pos.y = tree_pos.y + 1
+		if(self.direction == self.DIRECTION_LEFT):
+			tree_pos.x = tree_pos.x - 1
+		if(self.direction == self.DIRECTION_RIGHT):
+			tree_pos.x = tree_pos.x + 1
+		self.gamemap[tree_pos.x][tree_pos.y] = " "
+
+	def action_unlock(self, view):
+
+		door_pos = {"x": self.curr_position.x, "y": self.curr_position.y}
+		if(self.direction == self.DIRECTION_UP):
+			door_pos.y = door_pos.y - 1
+		if(self.direction == self.DIRECTION_DOWN):
+			door_pos.y = door_pos.y + 1
+		if(self.direction == self.DIRECTION_LEFT):
+			door_pos.x = door_pos.x - 1
+		if(self.direction == self.DIRECTION_RIGHT):
+			door_pos.x = door_pos.x + 1
+		self.gamemap[door_pos.x][door_pos.y] = " "
+	
 	# Display the map
 	def showMap(self):
 		print "+-----+"
@@ -57,4 +115,29 @@ class Gameboard(object):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
 		print "+-----+"
+
+	def expandRight(self):
+		numRow = len(gamemap)
+		for i in range(0,numRow):
+			self.gamemap[i].append("?")
+
+	def expandLeft(self):
+		numRow = len(gamemap)
+		for i in range(0,numRow):
+			self.gamemap[i] = ["?"].extend(self.gamemap[i])
+
+	## [?] + [currentlist ... ]
+	def expandTop(self):
+		newYRow = []
+		numCol = len(gamemap[0])
+		for i in range(0,numCol):
+			newYRow[i]= '?'
+		self.gamemap = newYRow.extend(self.gamemap)
+
+	def expandBottom(self):
+		newYRow = []
+		numCol = len(gamemap[0])
+		for i in range(0,numCol):
+			newYRow[i]= '?'
+		self.gamemap.append(newYRow)
 		
