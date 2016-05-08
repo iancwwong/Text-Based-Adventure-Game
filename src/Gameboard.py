@@ -97,7 +97,6 @@ class Gameboard(object):
 	
 		# Update the player's current position and icon
 		self.updatePlayerPosition(newPos)
-		self.updatePlayerIcon()
 
 		# Correct (ie rotate) the view as appropriate to direction
 		correctedView = view
@@ -117,8 +116,6 @@ class Gameboard(object):
 		print "From (%d, %d) to (%d, %d)" %(self.curr_position['y'] - 2, self.curr_position['x'] - 2, \
 							self.curr_position['y'] + 2, self.curr_position['x'] + 2)
 
-		#return
-
 		# Overwrite the portion of the map using the corrected view
 		# ie the 24 squares around the agent's new current position
 		#	[ (currpos.x - 2, currpos.y - 2), (currpos.x + 2, currpos.y + 2) ]
@@ -133,6 +130,9 @@ class Gameboard(object):
 						self.gamemap[maprow][mapcol] = correctedView[viewrow][viewcol]
 				viewcol += 1
 			viewrow += 1
+
+		# Place important markers
+		self.placeMarkers()
 				
 		
 	# Update icon of agent as facing the new direction when turned left
@@ -209,6 +209,14 @@ class Gameboard(object):
 	# Update the player's position (given as a dict)
 	def updatePlayerPosition(self, newPos):
 		self.curr_position = newPos
+
+	# Place important markers on the map
+	def placeMarkers(self):
+		# Starting position
+		self.changeTile(self.start_position, self.TILE_START_POS)
+
+		# Player
+		self.updatePlayerIcon()
 
 	# Change the tile to a specific tile character
 	def changeTile(self, pos, newTileChar):
