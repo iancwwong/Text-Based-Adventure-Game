@@ -80,9 +80,12 @@ class Agent(object):
 					print "Changed views"	
 					self.view = newView
 					self.gameboard.updateMap(self.view, userInput)
+
+					print "Map:"
 					self.gameboard.showMap()
 
 				# Display the view
+				print "View:"
 				self.displayView()
 
 			except socket.error:

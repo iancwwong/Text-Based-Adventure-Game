@@ -82,14 +82,14 @@ class Gameboard(object):
 				self.expandTop()
 				newPos = self.movePoint(self.curr_position, self.direction)
 		elif(self.direction == self.DIRECTION_DOWN):
-			if(newPos['y'] + 2 > len(self.gamemap)):
+			if(newPos['y'] + 2 >= len(self.gamemap)):
 				self.expandBottom()
 		elif(self.direction == self.DIRECTION_LEFT):
 			if(newPos['x'] - 2 < 0):
 				self.expandLeft()
 				newPos = self.movePoint(self.curr_position, self.direction)
 		elif(self.direction == self.DIRECTION_RIGHT):
-			if(newPos['x'] + 2 > len(self.gamemap[newPos['y']])):
+			if(newPos['x'] + 2 >= len(self.gamemap[newPos['y']])):
 				self.expandRight()
 	
 		# Update the player's current position and icon
@@ -107,6 +107,8 @@ class Gameboard(object):
 		elif (self.direction == self.DIRECTION_LEFT):
 			correctedView = self.rotateView(self.rotateView(self.rotateView(view)))
 
+		return
+
 		# Overwrite the portion of the map using the corrected view
 		# ie the 24 squares around the agent's new current position
 		#	[ (currpos.x - 2, currpos.y - 2), (currpos.x + 2, currpos.y + 2) ]
@@ -118,7 +120,13 @@ class Gameboard(object):
 				# Check for player position in view  at (2,2)
 				if (viewrow != 2 or viewcol != 2):
 					# Overwrite the tile with the corresponding one provided in view
-					self.gamemap[maprow][mapcol] = view[viewrow][viewcol]
+					try:
+						self.gamemap[maprow][mapcol] = view[viewrow][viewcol]
+					except IndexError:
+						print "Error with updating coordinates at:"
+						print "	map (%d, %d)" % (maprow, mapcol)
+						print "	view (%d, %d)" % (viewrow, viewcol)
+						exit()
 				viewcol += 1
 			viewrow += 1
 				
@@ -225,13 +233,21 @@ class Gameboard(object):
 	# ---------------------------
 	# Display the map
 	def showMap(self):
-		print "+-----+"
+		numCol = len(self.gamemap[0])
+
+		# Print column indexes
+		sys.stdout.write(" +")
+		for i in range(0, numCol):
+			sys.stdout.write(str(i))
+		print "+"
 		for i in range(0,len(self.gamemap)):
+			# Print out row index
+			sys.stdout.write(str(i))
 			sys.stdout.write("|")
 			for j in range(0,len(self.gamemap[i])):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
-		print "+-----+"
+		print " +-----+"
 
 	# Determine a new point, given it has moved one space in a target direction
 	def movePoint(self, point, direction):
