@@ -19,16 +19,34 @@ class Gameboard(object):
 	# Constructor
 	def __init__(self):
 		self.direction = self.DIRECTION_UP
-		self.
+		self.actions = {
+			"f": action_forward, 
+			"l": action_left, 
+			"r": action_right, 
+			"c": action_chop, 
+			"u": action_unlock
+		};
 		pass
 
 	# Update the map given a view
 	# newview is 5x5 list of lists
-	def updateMap(self, newview, action, direction):
+	def updateMap(self, newview, action):
 		if (action == 'init'):
 			self.gamemap = newview
 		else:
-			if (action == 'f')
+			self.actions[action]();
+		
+
+			## *nods head* 
+	def action_foward(self):
+        
+	def action_left(self):
+
+	def action_right(self):
+
+	def action_chop(self):
+
+	def action_unlock(self):
 
 	# Display the map
 	def showMap(self):
