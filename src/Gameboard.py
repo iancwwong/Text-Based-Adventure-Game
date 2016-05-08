@@ -74,71 +74,82 @@ class Gameboard(object):
 	def action_forward(self, view):
 
 		# Determine new position
-		newPos = movePoint(self.curr_position, self.direction)
+		newPos = self.movePoint(self.curr_position, self.direction)
 
 		# Expand the map (if necessary) in the appropriate direction
 		if(self.direction == self.DIRECTION_UP):
 			if(newPos['y'] - 2 < 0):
 				self.expandTop()
-				newPos = movePoint(self.curr_position, self.direction)
+				newPos = self.movePoint(self.curr_position, self.direction)
 		elif(self.direction == self.DIRECTION_DOWN):
 			if(newPos['y'] + 2 > len(self.gamemap)):
 				self.expandBottom()
 		elif(self.direction == self.DIRECTION_LEFT):
 			if(newPos['x'] - 2 < 0):
 				self.expandLeft()
-				newPos = movePoint(self.curr_position, self.direction)
+				newPos = self.movePoint(self.curr_position, self.direction)
 		elif(self.direction == self.DIRECTION_RIGHT):
 			if(newPos['x'] + 2 > len(self.gamemap[newPos['y']])):
 				self.expandRight()
 	
 		# Update the player's current position and icon
-		updatePlayerPosition(newPos)
-		updatePlayerIcon()
+		self.updatePlayerPosition(newPos)
+		self.updatePlayerIcon()
 
-		# Update portion of the map from the view appropriate to direction
-		# ie the 24 tiles around the player's new current position
-		#	[ (currpos.x - 2, currpos.y - 2), (currpos.x + 2, currpos.y + 2) ]
-		# Note: We read the map from top->bottom
-		if (self.direction == self.DIRECTION_UP):
-			# map top->bottom = view top->bottom
-
-		elif (self.direction == self.DIRECTION_RIGHT):	
-			# map top->bottom = view top->bottom
+		# Correct (ie rotate) the view as appropriate to direction
+		correctedView = view
+		if (self.direction == self.DIRECTION_RIGHT):	
+			correctedView = self.rotateView(view)
 		
 		elif (self.direction == self.DIRECTION_DOWN):
-			# map top->bottom = view top->bottom
+			correctedView = self.rotateView(self.rotateView(view))
 	
 		elif (self.direction == self.DIRECTION_LEFT):
-			# map top->bottom = view top->bottom
+			correctedView = self.rotateView(self.rotateView(self.rotateView(view)))
+
+		# Overwrite the portion of the map using the corrected view
+		# ie the 24 squares around the agent's new current position
+		#	[ (currpos.x - 2, currpos.y - 2), (currpos.x + 2, currpos.y + 2) ]
+		for maprow in range(self.curr_position['y'] - 2, self.curr_position['y'] + 3):		# row index of actual map
+			viewrow = 0									# row index of view
+			for mapcol in range(self.curr_position['x'] - 2, self.curr_position['x'] + 3):	# col index of actual map
+				viewcol = 0								# col index of view	
+			
+				# Check for player position in view  at (2,2)
+				if (viewrow != 2 or viewcol != 2):
+					# Overwrite the tile with the corresponding one provided in view
+					self.gamemap[maprow][mapcol] = view[viewrow][viewcol]
+				viewcol += 1
+			viewrow += 1
+				
 		
 	# Update icon of agent as facing the new direction when turned left
 	def action_left(self, view):
 		self.direction = (self.direction - 1) % 4
-		updatePlayerIcon()
+		self.updatePlayerIcon()
 
 	# Update icon of agent as facing the new direction when turned right
 	def action_right(self, view):
 		self.direction = (self.direction + 1) % 4
-		updatePlayerIcon()
+		self.updatePlayerIcon()
 
 	# Set position of a tree to be blank
 	def action_chop(self, view):
-		tree_pos = movePoint(self.curr_position, self.direction)
+		tree_pos = self.movePoint(self.curr_position, self.direction)
 
 		# Change the door to blank ONLY if position originally contains a door
 		# Else throw an error
-		if (getTile(tree_pos) == self.TILE_TREE):
-			changeTile(tree_pos, self.TILE_BLANK)
+		if (self.getTile(tree_pos) == self.TILE_TREE):
+			self.changeTile(tree_pos, self.TILE_BLANK)
 
 	# Set position of a door to be blank
 	def action_unlock(self, view):
-		door_pos = movePoint(self.curr_position, self.direction)
+		door_pos = self.movePoint(self.curr_position, self.direction)
 
 		# Change the door to blank ONLY if position originally contains a door
 		# Else throw an error
-		if (getTile(door_pos) == self.TILE_DOOR):
-			changeTile(door_pos, self.TILE_BLANK)
+		if (self.getTile(door_pos) == self.TILE_DOOR):
+			self.changeTile(door_pos, self.TILE_BLANK)
 
 	# Expand the map by adding in a column on the right
 	def expandRight(self):
@@ -173,13 +184,13 @@ class Gameboard(object):
 	# Update the player icon according to the direction
 	def updatePlayerIcon(self):
 		if (self.direction == self.DIRECTION_UP):
-			changeTile(self.curr_position, self.PLAYER_UP)
-		elif (self.direciton == self.DIRECTION_RIGHT):
-			changeTile(self.curr_position, self.PLAYER_RIGHT)
-		elif (self.direciton == self.DIRECTION_DOWN):
-			changeTile(self.curr_position, self.PLAYER_DOWN)
-		elif (self.direciton == self.DIRECTION_LEFT):
-			changeTile(self.curr_position, self.PLAYER_LEFT)
+			self.changeTile(self.curr_position, self.PLAYER_UP)
+		elif (self.direction == self.DIRECTION_RIGHT):
+			self.changeTile(self.curr_position, self.PLAYER_RIGHT)
+		elif (self.direction == self.DIRECTION_DOWN):
+			self.changeTile(self.curr_position, self.PLAYER_DOWN)
+		elif (self.direction == self.DIRECTION_LEFT):
+			self.changeTile(self.curr_position, self.PLAYER_LEFT)
 
 	# Update the player's position (given as a dict)
 	def updatePlayerPosition(self, newPos):
@@ -191,6 +202,23 @@ class Gameboard(object):
 			self.gamemap[pos['y']][pos['x']] = newTileChar
 		except IndexError:
 			print "Error: " + pos + " is invalid for current map."
+
+	# Rotate a view 90 degrees to the right
+	# Assume to be a 5x5 2d array
+	def rotateView(self, view):
+		# Prepare the new view	
+		rotatedView = []
+		
+		# Load the values
+		for i in range(0,5):			# column
+			rotatedRow = []
+			for j in range(0, 5):		# row
+				rotatedRow.append(view[len(view) - j - 1][i])
+			rotatedView.append(rotatedRow)
+	
+		# Return the rotated view
+		return rotatedView
+	
 
 	# ---------------------------
 	# MAP INFO
@@ -224,4 +252,15 @@ class Gameboard(object):
 			return self.gamemap[point['y']][point['x']]
 		except IndexError:
 			print "Error: " + point + " is invalid for current map."
+
+	# [DEBUG] Print out a particular view
+	def showView(self, view):
+		viewStr = "+-----+\n"
+		for i in range(0,len(view)):
+			viewStr += "|"
+			for j in range(0,len(view[i])):
+				viewStr += view[i][j]
+			viewStr += "|\n"
+		viewStr += "+-----+"
+		print viewStr
 
