@@ -107,7 +107,7 @@ class Gameboard(object):
 		elif (self.direction == self.DIRECTION_LEFT):
 			correctedView = self.rotateView(self.rotateView(self.rotateView(view)))
 
-		print "Corrected view:"
+		print "Corrected view, with direction %d:" % self.direction
 		self.showView(correctedView)
 
 		print "Portion of map to update:"
@@ -127,7 +127,7 @@ class Gameboard(object):
 				# Check for player position in view  at (2,2)
 				if (viewrow != 2 or viewcol != 2):
 					# Overwrite the tile with the corresponding one provided in view
-						self.gamemap[maprow][mapcol] = view[viewrow][viewcol]
+						self.gamemap[maprow][mapcol] = correctedView[viewrow][viewcol]
 				viewcol += 1
 			viewrow += 1
 				
