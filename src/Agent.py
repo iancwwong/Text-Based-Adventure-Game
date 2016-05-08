@@ -60,7 +60,7 @@ class Agent(object):
 		self.displayView()
 
 		# Update the map
-		self.gameboard.updateMap(self.view, 'init', self.DIRECTION_UP)
+		self.gameboard.updateMap(self.view, 'init')
 		self.gameboard.showMap()
 
 		while (self.conn_alive):
@@ -79,8 +79,8 @@ class Agent(object):
 				if not self.equalViews(self.view, newView):
 					print "Changed views"	
 					self.view = newView
-					#self.gameboard.updateMap(self.view, userInput, self.DIRECTION_UP)
-					#self.gameboard.showMap()
+					self.gameboard.updateMap(self.view, userInput)
+					self.gameboard.showMap()
 
 				# Display the view
 				self.displayView()
