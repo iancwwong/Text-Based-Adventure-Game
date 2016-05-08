@@ -5,3 +5,4 @@ T 	tree      	a 	axe
 -	door		k	key
 ~	water		o	stepping stone
 *	wall		g	gold
+ 	free space

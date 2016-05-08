@@ -11,6 +11,7 @@
 
 import socket
 from sys import argv
+from Gameboard import Gameboard
 
 # ---------------------------
 # AGENT
@@ -18,10 +19,11 @@ from sys import argv
 
 class Agent(object):
 
-	# Constants
-	
-	# Mapping of actions to keywords
-	action = {}
+	# Constants	
+	DIRECTION_UP = 1
+	DIRECTION_DOWN = 2
+	DIRECTION_LEFT = 3
+	DIRECTION_LEFT = 4
 	
 	def __init__(self, portnum):
 		# Create the TCP socket
@@ -39,28 +41,44 @@ class Agent(object):
 		# Prepare the view
 		self.view = []
 
-		# Prepare the action list
+		# Set initial direction
+		self.direction = self.DIRECTION_UP
+
+		# Prepare the gameboard
+		self.gameboard = Gameboard()
 		
 
 	# Run the main procedure of the agent
 	def run(self):
+		# Initialise the gameboard by reading in initial view
+		# Obtain the view
+		self.readView()
+
+		# Display the view
+		self.displayView()
+
+		# Update the map
+		self.gameboard.updateMap(self.view, 'init', self.DIRECTION_UP)
+		self.gameboard.showMap()
+
 		while (self.conn_alive):
-			try:
+			try:			
+				# Read input
+				userInput = raw_input('Enter Action(s): ')
+
+				# Send the input
+				self.submitDecision(userInput)
+				print ""	# formatting
+
 				# Obtain the view
 				self.readView()
 		
 				# Display the view
 				self.displayView()
-			
-				# Read input
-				userInput = raw_input('Enter Action(s): ')
 
-				# Send the input
-				self.processInput(userInput)
-
-				# 
-
-				print ""	# formatting
+				# Update the map
+				self.gameboard.updateMap(self.view, userInput, self.DIRECTION_UP)
+				self.gameboard.showMap()
 
 			except socket.error:
 
@@ -104,7 +122,7 @@ class Agent(object):
 		print viewStr
 
 	# Sends the user input to game engine
-	def processInput(self, userInput):
+	def submitDecision(self, userInput):
 		# Send out the message
 		try:
 			self.agentsocket.send(userInput)
