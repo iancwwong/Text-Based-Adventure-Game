@@ -51,8 +51,10 @@ class Agent(object):
 	# Run the main procedure of the agent
 	def run(self):
 		# Initialise the gameboard by reading in initial view
+
 		# Obtain the view
-		self.readView()
+		newView = self.readView()
+		self.view = newView
 
 		# Display the view
 		self.displayView()
@@ -71,14 +73,17 @@ class Agent(object):
 				print ""	# formatting
 
 				# Obtain the view
-				self.readView()
-		
+				newView = self.readView()
+
+				# Update the map if it has changed
+				if not self.equalViews(self.view, newView):
+					print "Changed views"	
+					self.view = newView
+					#self.gameboard.updateMap(self.view, userInput, self.DIRECTION_UP)
+					#self.gameboard.showMap()
+
 				# Display the view
 				self.displayView()
-
-				# Update the map
-				self.gameboard.updateMap(self.view, userInput, self.DIRECTION_UP)
-				self.gameboard.showMap()
 
 			except socket.error:
 
@@ -86,9 +91,8 @@ class Agent(object):
 				self.agentsocket.close()
 				self.conn_alive = False
 
-	# Obtain the data for the agent view
-	# by reading in data stream, and parsing
-	# into individual characters
+	# Obtain the data for the agent view by reading in data stream, and parsing
+	# into individual characters. 
 	def readView(self):
 		viewI = []
 		viewStr = []
@@ -106,7 +110,7 @@ class Agent(object):
 				else:
 					viewJ.append('^')	# agent
 			viewI.append(viewJ)
-		self.view = viewI
+		return viewI
 
 	# Format and print out the view (with some formatting)
 	# where view is a 5x5 list of lists
@@ -120,6 +124,21 @@ class Agent(object):
 			viewStr += "|\n"
 		viewStr += "+-----+"
 		print viewStr
+
+	# Compare two views for equivalence
+	# Each view is a list of lists (5x5 2D array).
+	# Returns true or false
+	def equalViews(self, view1, view2):
+
+		# Check if views are of 5x5, and that their lengths are equal
+		if (len(view1) == 5) and (len(view2) == 5):
+			for i in range(0,5):
+				for j in range(0,5):
+					if (view1[i][j] != view2[i][j]):
+						return False
+			return True
+		else:
+			return False			
 
 	# Sends the user input to game engine
 	def submitDecision(self, userInput):
