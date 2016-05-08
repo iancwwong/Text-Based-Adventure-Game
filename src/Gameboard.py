@@ -115,29 +115,27 @@ class Gameboard(object):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
 		print "+-----+"
-
 	def expandRight(self):
-		numRow = len(gamemap)
+		numRow = len(self.gamemap)
 		for i in range(0,numRow):
 			self.gamemap[i].append("?")
 
 	def expandLeft(self):
-		numRow = len(gamemap)
+		numRow = len(self.gamemap)
 		for i in range(0,numRow):
-			self.gamemap[i] = ["?"].extend(self.gamemap[i])
+			self.gamemap[i] = ["?"] + self.gamemap[i]
 
 	## [?] + [currentlist ... ]
 	def expandTop(self):
 		newYRow = []
-		numCol = len(gamemap[0])
+		numCol = len(self.gamemap[0])
 		for i in range(0,numCol):
-			newYRow[i]= '?'
-		self.gamemap = newYRow.extend(self.gamemap)
+			newYRow.append('?')
+		self.gamemap.insert(0, newYRow)
 
 	def expandBottom(self):
 		newYRow = []
-		numCol = len(gamemap[0])
+		numCol = len(self.gamemap[0])
 		for i in range(0,numCol):
-			newYRow[i]= '?'
+			newYRow.append('?')
 		self.gamemap.append(newYRow)
-		
