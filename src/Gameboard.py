@@ -42,12 +42,15 @@ class Gameboard(object):
 	gamemap = [] # global view of the map (explored so far)
 	direction = 0
 	curr_position = {}
+	start_position = {}
 	
 	# Constructor
 	def __init__(self):
 		self.direction = self.DIRECTION_UP
 		self.curr_position['x'] = 2
 		self.curr_position['y'] = 2
+		self.start_position['x'] = 2
+		self.start_position['y'] = 2
 
 	# ---------------------------
 	# MAP MANIPULATION
@@ -172,6 +175,7 @@ class Gameboard(object):
 		for i in range(0,numRow):
 			self.gamemap[i] = ["?"] + self.gamemap[i]
 		self.curr_position['x'] += 1		# Move player one tile to the right
+		self.start_position['x'] += 1		# Move starting position one tile to the right
 
 	# Expand the map by adding in a row on the top
 	def expandTop(self):
@@ -181,6 +185,7 @@ class Gameboard(object):
 			newYRow.append('?')
 		self.gamemap.insert(0, newYRow)
 		self.curr_position['y'] += 1		# Move player one tile down
+		self.start_position['y'] += 1		# Move starting position one tile down
 
 	# Expand the map by adding in a row on the bottom
 	def expandBottom(self):
