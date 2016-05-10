@@ -100,6 +100,9 @@ class Agent(object):
 		
 					# Check for any items that have been obtained
 					self.checkForObtainedItems()
+
+					# Check for any items that have been used/discarded
+					self.checkForUsedItems()
 	
 					# Update the view and gamemap
 					self.view = newView
@@ -161,13 +164,16 @@ class Agent(object):
 
 	# Check if the given (most recent) action was successful, meaning the environment has changed somehow.
 	# An action is successful if:
-	#	1. The view has changed somehow (ie different)
-	# OR	2. The action can be resolved by considering the rules of the game
+	#	1. Action is a valid action (ie matches the specific action characters)
+	#	2. The view has changed somehow (ie different)
+	# OR	3. The action can be resolved by considering the rules of the game
 	def actionSuccessful(self, newView, action):
-		if (not self.equalViews(self.view, newView)):
+		if (not self.actionValid(action)):
+			return False
+		elif (not self.equalViews(self.view, newView)):
 			return True
 		else:
-			# Check whether the action is invalid
+			# Check whether the action changes the environment with its meaning to other tiles
 			
 			# Case when agent has walked into a wall
 			if (self.hasWall(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
@@ -206,6 +212,17 @@ class Agent(object):
 			# Obtain and append the item to item list
 			self.items.append(self.view[1][2])
 
+	# Examine for any items that have been used:
+	# * Stepping stone
+	def checkForUsedItems(self):
+
+		# Discard stepping stone if we have moved forward into some water whilst having 
+		# a stepping stone in posession
+		if (self.hasTile(self.view, (1,2), gs.TILE_WATER)) and \
+		   (gs.TILE_STEPPING_STONE in self.items) and \
+		   (self.decisionmaker.getLatestAction() == gs.ACTION_FORWARD):
+			self.items.remove(gs.TILE_STEPPING_STONE)
+
 	# ---------------------------
 	# HELPER FUNCTIONS
 	# ---------------------------
@@ -233,6 +250,10 @@ class Agent(object):
 		except socket.error, e:
 			print "Error sending: %s" % e
 			self.conn_alive = False	
+
+	# Check if the action is defined
+	def actionValid(self, action):
+		return (action in gs.action_list)
 
 	# Check whether a particular position (supplied as a tuple) in a view contains an item
 	# ie an axe ('a'), key ('k'), gold ('g'), or stepping stone ('o')
