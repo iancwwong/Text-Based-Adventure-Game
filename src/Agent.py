@@ -82,23 +82,20 @@ class Agent(object):
 
 		while (self.conn_alive):
 			try:
-				# Read input
-				userInput = raw_input('Enter Action(s): ')
+				# Generate an action
+				action = self.decisionmaker.getAction()
 
-				# Send the input
-				# self.submitDecision(userInput)
-				# print ""	# formatting
-
-				self.submitDecision(self.decisionmaker.getAction())
+				# Submit the action
+				self.submitDecision(action)
 
 				# Obtain the view
 				newView = self.readView()
 
 				# Update the map if action was successful
-				if self.actionSuccessful(newView, userInput):
+				if self.actionSuccessful(newView, action):
 
 					# Add the decision to past decisions list
-					self.decisionmaker.addPastAction(userInput)
+					self.decisionmaker.addPastAction(action)
 
 					# Check for any items that have been obtained
 					self.checkForObtainedItems()
@@ -108,7 +105,7 @@ class Agent(object):
 
 					# Update the view and gamemap
 					self.view = newView
-					self.gameboard.updateMap(self.view, userInput)
+					self.gameboard.updateMap(self.view, action)
 
 					# DEBUGGING
 					print "Current items:"

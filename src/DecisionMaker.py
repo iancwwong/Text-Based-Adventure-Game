@@ -39,6 +39,6 @@ class DecisionMaker(object):
 	def getAllPastActions(self):
 		return self.past_actions
 
-	#  dec man pass in action
+	# Return an action to agent
 	def getAction(self):
 		return gs.ACTION_FORWARD
