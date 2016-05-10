@@ -99,7 +99,7 @@ class Agent(object):
 					self.decisionmaker.addPastAction(userInput)
 		
 					# Check for any items that have been obtained
-					self.checkForObtainedItems(newView)
+					self.checkForObtainedItems()
 	
 					# Update the view and gamemap
 					self.view = newView
@@ -108,6 +108,9 @@ class Agent(object):
 					# DEBUGGING
 					print "Current items:"
 					print self.items
+
+					print "Actions taken:"
+					print self.decisionmaker.getAllPastActions()
 
 					print "Map:"
 					self.gameboard.showMap()

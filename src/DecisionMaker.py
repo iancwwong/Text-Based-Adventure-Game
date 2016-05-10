@@ -25,5 +25,9 @@ class DecisionMaker(object):
 	# Returns the last (successful) action conducted by the agent
 	def getLatestAction(self):
 		return self.past_actions[-1]
+
+	# Returns all the (successful) actions conducted by the agent as a list
+	def getAllPastActions(self):
+		return self.past_actions
 		
 	
