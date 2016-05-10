@@ -12,7 +12,7 @@ class DecisionMaker(object):
 	ACTION_UNLOCK = 'u'
 
 	# Attributes
-	past_actions		# a list of past actions (consisting of single chars)
+	past_actions = []		# a list of past actions (consisting of single chars)
 	
 	# Constructor
 	def __init__(self):

@@ -12,6 +12,7 @@
 import socket
 from sys import argv
 from Gameboard import Gameboard
+from DecisionMaker import DecisionMaker
 
 # ---------------------------
 # AGENT
@@ -25,14 +26,14 @@ class Agent(object):
 	DIRECTION_LEFT = 4
 
 	# Attributes
-	agentsocket	# Communicates with the game engine
-	conn_alive	# Flag representing connection state
+	agentsocket = None	# Communicates with the game engine
+	conn_alive = False	# Flag representing connection state
 
-	view		# contains the 5x5 view from the agent's perspective
-	direction	# tracks the agent's direction
-	items		# tracks the agent's current possessed items
-	gameboard	# Component that keeps track of the map known so far (built from views)
-	decisionmaker 	# Component that makes decisions for the agent
+	view = []		# contains the 5x5 view from the agent's perspective
+	direction = 0		# tracks the agent's direction
+	items = []		# tracks the agent's current possessed items
+	gameboard = None	# Component that keeps track of the map known so far (built from views)
+	decisionmaker = None 	# Component that makes decisions for the agent
 	
 	
 	def __init__(self, portnum):
