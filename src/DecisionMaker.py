@@ -3,7 +3,7 @@
 #! /usr/bin/python
 
 import GameSymbols as gs
-import Gameboard
+from Gameboard import Gameboard
 
 class DecisionMaker(object):
 
