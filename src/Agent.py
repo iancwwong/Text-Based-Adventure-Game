@@ -25,6 +25,12 @@ class Agent(object):
 	DIRECTION_LEFT = 3
 	DIRECTION_LEFT = 4
 
+	ACTION_FORWARD = 'f'
+	ACTION_RIGHT = 'r'
+	ACTION_LEFT = 'l'
+	ACTION_CHOP = 'c'
+	ACTION_UNLOCK = 'u'
+
 	# Attributes
 	agentsocket = None	# Communicates with the game engine
 	conn_alive = False	# Flag representing connection state
@@ -91,9 +97,8 @@ class Agent(object):
 				# Obtain the view
 				newView = self.readView()
 
-				# Update the map if the view has changed
-				# Also may be an indication that last action was successful
-				if not self.equalViews(self.view, newView):
+				# Update the map if action was successful
+				if self.actionSuccessful(newView, userInput):
 
 					# Add the decision to past decisions list
 					self.decisionmaker.addPastAction(userInput)
@@ -159,6 +164,34 @@ class Agent(object):
 		viewStr += "+-----+"
 		print viewStr
 
+	# Check if the given (most recent) action was successful, meaning the environment has changed somehow.
+	# An action is successful if:
+	#	1. The view has changed somehow (ie different)
+	# OR	2. The action can be resolved by considering the rules of the game
+	def actionSuccessful(self, newView, action):
+		if (not self.equalViews(self.view, newView)):
+			return True
+		else:
+			# Check whether the action is invalid
+			
+			# Case when agent has walked into a wall
+			if (self.hasWall(self.view, (1,2))) and (action == self.ACTION_FORWARD):
+				return False
+			
+			# Case when agent chops something OTHER than a tree
+			elif (not self.hasTree(self.view, (1,2))) and (action == self.ACTION_CHOP):
+				return False
+
+			# Case when agent unlocks something OTHER than a door
+			elif (not self.hasDoor(self.view, (1,2))) and (action == self.ACTION_UNLOCK):
+				return False
+				
+			# Any other cases?
+			# Otherwise, it should be a valid action
+			else:
+				return True
+
+
 	# Examines the new view to see if the user has picked up any items
 	# and Update the items list as appropriately
 	# Condition for picking up an item: 
@@ -205,6 +238,21 @@ class Agent(object):
 		if (view[row][col] == 'a' or view[row][col] == 'k' or view[row][col] == 'g' or view[row][col] == 'o'):
 			return True
 		return False
+
+	# Check whether a particular position (supplied as a tuple) in a view contains a wall
+	def hasWall(self, view, pos):
+		return (view[pos[0]][pos[1]] == '*')
+
+	# Check whether a particular position (supplied as a tuple) in a view contains a tree
+	def hasTree(self, view, pos):
+		return (view[pos[0]][pos[1]] == 'T')
+
+	# Check whether a particular position (supplied as a tuple) in a view contains a door
+	def hasDoor(self, view, pos):
+		return (view[pos[0]][pos[1]] == '-')
+
+	def hasTile(self, view, pos, tile):
+		return (view[pos[0]][pos[1]] == tile)
 
 # ---------------------------
 # MAIN
