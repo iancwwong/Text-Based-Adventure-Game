@@ -20,7 +20,7 @@ import GameSymbols as gs
 # ---------------------------
 class Agent(object):
 
-	# Constants	
+	# Constants
 	DIRECTION_UP = 1
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
@@ -35,8 +35,8 @@ class Agent(object):
 	items = []		# tracks the agent's current possessed items
 	gameboard = None	# Component that keeps track of the map known so far (built from views)
 	decisionmaker = None 	# Component that makes decisions for the agent
-	
-	
+
+
 	def __init__(self, portnum):
 		# Create the TCP socket
 		self.agentsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,8 +63,8 @@ class Agent(object):
 		self.gameboard = Gameboard()
 
 		# Prepare the decision maker
-		self.decisionmaker = DecisionMaker()
-		
+		self.decisionmaker = DecisionMaker(self.gameboard)
+
 	# Run the main procedure of the agent
 	def run(self):
 		# Initialise the gameboard by reading in initial view
@@ -81,13 +81,15 @@ class Agent(object):
 		self.gameboard.showMap()
 
 		while (self.conn_alive):
-			try:			
+			try:
 				# Read input
 				userInput = raw_input('Enter Action(s): ')
 
 				# Send the input
-				self.submitDecision(userInput)
-				print ""	# formatting
+				# self.submitDecision(userInput)
+				# print ""	# formatting
+
+				self.submitDecision(self.decisionmaker.getAction())
 
 				# Obtain the view
 				newView = self.readView()
@@ -97,13 +99,13 @@ class Agent(object):
 
 					# Add the decision to past decisions list
 					self.decisionmaker.addPastAction(userInput)
-		
+
 					# Check for any items that have been obtained
 					self.checkForObtainedItems()
 
 					# Check for any items that have been used/discarded
 					self.checkForUsedItems()
-	
+
 					# Update the view and gamemap
 					self.view = newView
 					self.gameboard.updateMap(self.view, userInput)
@@ -129,7 +131,7 @@ class Agent(object):
 				self.conn_alive = False
 
 	# Obtain the data for the agent view by reading in data stream, and parsing
-	# into individual characters. 
+	# into individual characters.
 	def readView(self):
 		viewI = []
 		viewStr = []
@@ -174,7 +176,7 @@ class Agent(object):
 			return True
 		else:
 			# Check whether the action changes the environment with its meaning to other tiles
-			
+
 			# Case when agent has walked into a wall
 			if (self.hasWall(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
 				return False
@@ -186,7 +188,7 @@ class Agent(object):
 			# Case when agent has walked into a door
 			elif (self.hasDoor(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
 				return False
-			
+
 			# Case when agent chops something OTHER than a tree
 			elif (not self.hasTree(self.view, (1,2))) and (action == gs.ACTION_CHOP):
 				return False
@@ -194,7 +196,7 @@ class Agent(object):
 			# Case when agent unlocks something OTHER than a door
 			elif (not self.hasDoor(self.view, (1,2))) and (action == gs.ACTION_UNLOCK):
 				return False
-				
+
 			# Any other cases?
 			# Otherwise, it should be a valid action
 			else:
@@ -203,12 +205,12 @@ class Agent(object):
 
 	# Examines the new view to see if the user has picked up any items
 	# and Update the items list as appropriately
-	# Condition for picking up an item: 
+	# Condition for picking up an item:
 	#	1. An item existed in the tile in front of the player in the previous view
 	#	2. The last action to be made was 'move forward' (assumes this was successful)
 	def checkForObtainedItems(self):
 		if (self.hasItem(self.view, (1,2))) and (self.decisionmaker.getLatestAction() == gs.ACTION_FORWARD):
-			
+
 			# Obtain and append the item to item list
 			self.items.append(self.view[1][2])
 
@@ -216,7 +218,7 @@ class Agent(object):
 	# * Stepping stone
 	def checkForUsedItems(self):
 
-		# Discard stepping stone if we have moved forward into some water whilst having 
+		# Discard stepping stone if we have moved forward into some water whilst having
 		# a stepping stone in posession
 		if (self.hasTile(self.view, (1,2), gs.TILE_WATER)) and \
 		   (gs.TILE_STEPPING_STONE in self.items) and \
@@ -240,7 +242,7 @@ class Agent(object):
 						return False
 			return True
 		else:
-			return False			
+			return False
 
 	# Sends the user input to game engine
 	def submitDecision(self, userInput):
@@ -249,7 +251,7 @@ class Agent(object):
 			self.agentsocket.send(userInput)
 		except socket.error, e:
 			print "Error sending: %s" % e
-			self.conn_alive = False	
+			self.conn_alive = False
 
 	# Check if the action is defined
 	def actionValid(self, action):
