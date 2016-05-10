@@ -13,6 +13,7 @@ import socket
 from sys import argv
 from Gameboard import Gameboard
 from DecisionMaker import DecisionMaker
+import GameSymbols as gs
 
 # ---------------------------
 # AGENT
@@ -24,12 +25,6 @@ class Agent(object):
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
 	DIRECTION_LEFT = 4
-
-	ACTION_FORWARD = 'f'
-	ACTION_RIGHT = 'r'
-	ACTION_LEFT = 'l'
-	ACTION_CHOP = 'c'
-	ACTION_UNLOCK = 'u'
 
 	# Attributes
 	agentsocket = None	# Communicates with the game engine
@@ -147,7 +142,7 @@ class Agent(object):
 						exit()
 					viewJ.append(ch)
 				else:
-					viewJ.append('^')	# agent
+					viewJ.append(gs.PLAYER_UP)	# agent as '^'
 			viewI.append(viewJ)
 		return viewI
 
@@ -175,15 +170,15 @@ class Agent(object):
 			# Check whether the action is invalid
 			
 			# Case when agent has walked into a wall
-			if (self.hasWall(self.view, (1,2))) and (action == self.ACTION_FORWARD):
+			if (self.hasWall(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
 				return False
 			
 			# Case when agent chops something OTHER than a tree
-			elif (not self.hasTree(self.view, (1,2))) and (action == self.ACTION_CHOP):
+			elif (not self.hasTree(self.view, (1,2))) and (action == gs.ACTION_CHOP):
 				return False
 
 			# Case when agent unlocks something OTHER than a door
-			elif (not self.hasDoor(self.view, (1,2))) and (action == self.ACTION_UNLOCK):
+			elif (not self.hasDoor(self.view, (1,2))) and (action == gs.ACTION_UNLOCK):
 				return False
 				
 			# Any other cases?
@@ -198,7 +193,7 @@ class Agent(object):
 	#	1. An item existed in the tile in front of the player in the previous view
 	#	2. The last action to be made was 'move forward' (assumes this was successful)
 	def checkForObtainedItems(self):
-		if (self.hasItem(self.view, (1,2))) and (self.decisionmaker.getLatestAction() == 'f'):
+		if (self.hasItem(self.view, (1,2))) and (self.decisionmaker.getLatestAction() == gs.ACTION_FORWARD):
 			
 			# Obtain and append the item to item list
 			self.items.append(self.view[1][2])
@@ -235,21 +230,22 @@ class Agent(object):
 	# ie an axe ('a'), key ('k'), gold ('g'), or stepping stone ('o')
 	def hasItem(self, view, pos):
 		row, col = pos
-		if (view[row][col] == 'a' or view[row][col] == 'k' or view[row][col] == 'g' or view[row][col] == 'o'):
+		if (view[row][col] == gs.TILE_AXE or view[row][col] == gs.TILE_KEY or \
+		    view[row][col] == gs.TILE_GOLD or view[row][col] == gs.TILE_STEPPING_STONE):
 			return True
 		return False
 
 	# Check whether a particular position (supplied as a tuple) in a view contains a wall
 	def hasWall(self, view, pos):
-		return (view[pos[0]][pos[1]] == '*')
+		return (view[pos[0]][pos[1]] == gs.TILE_WALL)
 
 	# Check whether a particular position (supplied as a tuple) in a view contains a tree
 	def hasTree(self, view, pos):
-		return (view[pos[0]][pos[1]] == 'T')
+		return (view[pos[0]][pos[1]] == gs.TILE_TREE)
 
 	# Check whether a particular position (supplied as a tuple) in a view contains a door
 	def hasDoor(self, view, pos):
-		return (view[pos[0]][pos[1]] == '-')
+		return (view[pos[0]][pos[1]] == gs.TILE_DOOR)
 
 	def hasTile(self, view, pos, tile):
 		return (view[pos[0]][pos[1]] == tile)

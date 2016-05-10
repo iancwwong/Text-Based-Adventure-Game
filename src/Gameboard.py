@@ -7,6 +7,7 @@
 #! /usr/bin/python
 
 import sys
+import GameSymbols as gs
 
 class Gameboard(object):
 
@@ -17,26 +18,8 @@ class Gameboard(object):
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
 
-	# Player icon
-	PLAYER_UP = '^'
-	PLAYER_RIGHT = '>'
-	PLAYER_DOWN = 'v'
-	PLAYER_LEFT = '<'
-
-	# Tiles
-	TILE_WALL = '*'
-	TILE_WATER = '~'
-	TILE_DOOR = '-'
-	TILE_TREE = 'T'
-	TILE_BLANK = ' '
-	TILE_AXE = 'a'
-	TILE_KEY = 'k'
-	TILE_STEPPING_STONE = 'o'
-	TILE_GOLD = 'g'
-	TILE_START_POS = 's'
-
 	# Attributes
-	gamemap = [] # global view of the map (explored so far)
+	gamemap = [] 		# global view of the map (explored so far)
 	direction = 0
 	curr_position = {}
 	start_position = {}
@@ -59,15 +42,15 @@ class Gameboard(object):
 		if (action == 'init'):
 			self.gamemap = newview
 		else:			
-			if action == 'f':
+			if action == gs.ACTION_FORWARD:
 				self.action_forward(newview)
-			elif action == 'l':
+			elif action == gs.ACTION_LEFT:
 				self.action_left(newview)
-			elif action == 'r':
+			elif action == gs.ACTION_RIGHT:
 				self.action_right(newview)			
-			elif action == 'c':
+			elif action == gs.ACTION_CHOP:
 				self.action_chop(newview)			
-			elif action == 'u':
+			elif action == gs.ACTION_UNLOCK:
 				self.action_unlock(newview)
 	
 	# Update map from view given as agent moved FORWARD	
@@ -148,8 +131,8 @@ class Gameboard(object):
 
 		# Change the door to blank ONLY if position originally contains a door
 		# Else throw an error
-		if (self.getTile(tree_pos) == self.TILE_TREE):
-			self.changeTile(tree_pos, self.TILE_BLANK)
+		if (self.getTile(tree_pos) == gs.TILE_TREE):
+			self.changeTile(tree_pos, gs.TILE_BLANK)
 
 	# Set position of a door to be blank
 	def action_unlock(self, view):
@@ -157,8 +140,8 @@ class Gameboard(object):
 
 		# Change the door to blank ONLY if position originally contains a door
 		# Else throw an error
-		if (self.getTile(door_pos) == self.TILE_DOOR):
-			self.changeTile(door_pos, self.TILE_BLANK)
+		if (self.getTile(door_pos) == gs.TILE_DOOR):
+			self.changeTile(door_pos, gs.TILE_BLANK)
 
 	# Expand the map by adding in a column on the right
 	def expandRight(self):
@@ -195,13 +178,13 @@ class Gameboard(object):
 	# Update the player icon according to the direction
 	def updatePlayerIcon(self):
 		if (self.direction == self.DIRECTION_UP):
-			self.changeTile(self.curr_position, self.PLAYER_UP)
+			self.changeTile(self.curr_position, gs.PLAYER_UP)
 		elif (self.direction == self.DIRECTION_RIGHT):
-			self.changeTile(self.curr_position, self.PLAYER_RIGHT)
+			self.changeTile(self.curr_position, gs.PLAYER_RIGHT)
 		elif (self.direction == self.DIRECTION_DOWN):
-			self.changeTile(self.curr_position, self.PLAYER_DOWN)
+			self.changeTile(self.curr_position, gs.PLAYER_DOWN)
 		elif (self.direction == self.DIRECTION_LEFT):
-			self.changeTile(self.curr_position, self.PLAYER_LEFT)
+			self.changeTile(self.curr_position, gs.PLAYER_LEFT)
 
 	# Update the player's position (given as a dict)
 	def updatePlayerPosition(self, newPos):
@@ -210,7 +193,7 @@ class Gameboard(object):
 	# Place important markers on the map
 	def placeMarkers(self):
 		# Starting position
-		self.changeTile(self.start_position, self.TILE_START_POS)
+		self.changeTile(self.start_position, gs.TILE_START_POS)
 
 		# Player
 		self.updatePlayerIcon()

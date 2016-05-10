@@ -19,3 +19,9 @@ ACTION_RIGHT = 'r'
 ACTION_LEFT = 'l'
 ACTION_CHOP = 'c'
 ACTION_UNLOCK = 'u'
+
+# Player icon
+PLAYER_UP = '^'
+PLAYER_RIGHT = '>'
+PLAYER_DOWN = 'v'
+PLAYER_LEFT = '<'
