@@ -35,9 +35,6 @@ class Gameboard(object):
 	TILE_GOLD = 'g'
 	TILE_START_POS = 's'
 
-	# Player icon
-	PLAYER_UP
-
 	# Attributes
 	gamemap = [] # global view of the map (explored so far)
 	direction = 0
