@@ -12,7 +12,7 @@ import GameSymbols as gs
 class Gameboard(object):
 
 	# Constants
-	# Direction	
+	# Direction
 	DIRECTION_UP = 0
 	DIRECTION_RIGHT = 1
 	DIRECTION_DOWN = 2
@@ -23,7 +23,7 @@ class Gameboard(object):
 	direction = 0
 	curr_position = {}
 	start_position = {}
-	
+
 	# Constructor
 	def __init__(self):
 		self.direction = self.DIRECTION_UP
@@ -41,19 +41,19 @@ class Gameboard(object):
 	def updateMap(self, newview, action):
 		if (action == 'init'):
 			self.gamemap = newview
-		else:			
+		else:
 			if action == gs.ACTION_FORWARD:
 				self.action_forward(newview)
 			elif action == gs.ACTION_LEFT:
 				self.action_left(newview)
 			elif action == gs.ACTION_RIGHT:
-				self.action_right(newview)			
+				self.action_right(newview)
 			elif action == gs.ACTION_CHOP:
-				self.action_chop(newview)			
+				self.action_chop(newview)
 			elif action == gs.ACTION_UNLOCK:
 				self.action_unlock(newview)
-	
-	# Update map from view given as agent moved FORWARD	
+
+	# Update map from view given as agent moved FORWARD
 	def action_forward(self, view):
 
 		# Determine new position
@@ -74,18 +74,18 @@ class Gameboard(object):
 		elif(self.direction == self.DIRECTION_RIGHT):
 			if(newPos['x'] + 2 >= len(self.gamemap[newPos['y']])):
 				self.expandRight()
-	
+
 		# Update the player's current position and icon
 		self.updatePlayerPosition(newPos)
 
 		# Correct (ie rotate) the view as appropriate to direction
 		correctedView = view
-		if (self.direction == self.DIRECTION_RIGHT):	
+		if (self.direction == self.DIRECTION_RIGHT):
 			correctedView = self.rotateView(view)
-		
+
 		elif (self.direction == self.DIRECTION_DOWN):
 			correctedView = self.rotateView(self.rotateView(view))
-	
+
 		elif (self.direction == self.DIRECTION_LEFT):
 			correctedView = self.rotateView(self.rotateView(self.rotateView(view)))
 
@@ -113,8 +113,8 @@ class Gameboard(object):
 
 		# Place important markers
 		self.placeMarkers()
-				
-		
+
+
 	# Update icon of agent as facing the new direction when turned left
 	def action_left(self, view):
 		self.direction = (self.direction - 1) % 4
@@ -208,19 +208,19 @@ class Gameboard(object):
 	# Rotate a view 90 degrees to the right
 	# Assume to be a 5x5 2d array
 	def rotateView(self, view):
-		# Prepare the new view	
+		# Prepare the new view
 		rotatedView = []
-		
+
 		# Load the values
 		for i in range(0,5):			# column
 			rotatedRow = []
 			for j in range(0, 5):		# row
 				rotatedRow.append(view[len(view) - j - 1][i])
 			rotatedView.append(rotatedRow)
-	
+
 		# Return the rotated view
 		return rotatedView
-	
+
 
 	# ---------------------------
 	# MAP INFO
@@ -254,7 +254,7 @@ class Gameboard(object):
 			newPos['x'] = newPos['x'] - 1
 		elif(direction == self.DIRECTION_RIGHT):
 			newPos['x'] = newPos['x'] + 1
-		return newPos	
+		return newPos
 
 	# Return the character at a particular position on the map
 	def getTile(self, point):
@@ -262,6 +262,14 @@ class Gameboard(object):
 			return self.gamemap[point['y']][point['x']]
 		except IndexError:
 			print "Error: " + point + " is invalid for current map."
+
+	# returns the number of column in the gameboard
+	def numCols():
+		return len(self.gamemap[0])
+
+	# return the number of rows in the gameboard
+	def numRows():
+		return len(self.gamemap)
 
 	# [DEBUG] Print out a particular view
 	def showView(self, view):
@@ -273,4 +281,3 @@ class Gameboard(object):
 			viewStr += "|\n"
 		viewStr += "+-----+"
 		print viewStr
-

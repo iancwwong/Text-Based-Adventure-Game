@@ -41,4 +41,32 @@ class DecisionMaker(object):
 
 	# Return an action to agent
 	def getAction(self):
-		return gs.ACTION_FORWARD
+		if len(todo_actions) == 0:
+			self.determineActions()
+		return todo_actions.pop(0)
+
+	# determine the most appropriate action to perform next at any given time
+	def determineActions(self):
+		# determine our goal - find gold position
+		# consult gameboard for the answer to the question of life
+
+		# what is more important to look for/get
+		for(i in range(0, self.gameboard.newRows())):
+			for(j in range(0, self.gameboard.newRows())):
+				currpoint = {"x" : i, "y" : j}
+				# if self.gameblahblah == pq.head
+				if(self.gameboard.getTile(currpoint) == GameSymbols.TILE_GOLD):
+					return currpoint
+
+
+		# when we lo gameboard gives us a way
+		# determine a set of vaild actions we can perform to get to the gold position
+
+		# determine a list of actions so we can look for a way to happiness
+
+
+		#return self.IANISANOOBATLEAGUE
+
+	# update the current list of items we have in the list
+	def updateCurrItems(self, items):
+		self.curr_items = items

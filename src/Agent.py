@@ -103,6 +103,9 @@ class Agent(object):
 					# Check for any items that have been used/discarded
 					self.checkForUsedItems()
 
+					# update the decisionmaker's current item list
+					self.decisionmaker.updateCurrItems(self.items)
+
 					# Update the view and gamemap
 					self.view = newView
 					self.gameboard.updateMap(self.view, action)
