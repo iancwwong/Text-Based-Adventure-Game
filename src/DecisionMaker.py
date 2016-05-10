@@ -41,9 +41,11 @@ class DecisionMaker(object):
 
 	# Return an action to agent
 	def getAction(self):
-		if len(todo_actions) == 0:
+		if len(self.todo_actions) == 0:
 			self.determineActions()
-		return todo_actions.pop(0)
+
+		return 'f'
+		#return self.todo_actions.pop(0)
 
 	# determine the most appropriate action to perform next at any given time
 	def determineActions(self):
@@ -51,12 +53,13 @@ class DecisionMaker(object):
 		# consult gameboard for the answer to the question of life
 
 		# what is more important to look for/get
-		for(i in range(0, self.gameboard.newRows())):
-			for(j in range(0, self.gameboard.newRows())):
-				currpoint = {"x" : i, "y" : j}
+		for i in range(0, self.gameboard.numRows()):
+			for j in range(0, self.gameboard.numCols()):
+				currpoint = {"x" : j, "y" : i}
 				# if self.gameblahblah == pq.head
-				if(self.gameboard.getTile(currpoint) == GameSymbols.TILE_GOLD):
-					return currpoint
+				if(self.gameboard.getTile(currpoint) == gs.TILE_GOLD):
+					print "Goal: " 
+					print currpoint
 
 
 		# when we lo gameboard gives us a way

@@ -264,11 +264,11 @@ class Gameboard(object):
 			print "Error: " + point + " is invalid for current map."
 
 	# returns the number of column in the gameboard
-	def numCols():
+	def numCols(self):
 		return len(self.gamemap[0])
 
 	# return the number of rows in the gameboard
-	def numRows():
+	def numRows(self):
 		return len(self.gamemap)
 
 	# [DEBUG] Print out a particular view
