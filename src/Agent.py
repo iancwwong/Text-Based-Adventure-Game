@@ -172,6 +172,14 @@ class Agent(object):
 			# Case when agent has walked into a wall
 			if (self.hasWall(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
 				return False
+
+			# Case when agent has walked into a tree
+			elif (self.hasTree(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
+				return False
+
+			# Case when agent has walked into a door
+			elif (self.hasDoor(self.view, (1,2))) and (action == gs.ACTION_FORWARD):
+				return False
 			
 			# Case when agent chops something OTHER than a tree
 			elif (not self.hasTree(self.view, (1,2))) and (action == gs.ACTION_CHOP):
