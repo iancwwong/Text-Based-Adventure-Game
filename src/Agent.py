@@ -16,7 +16,6 @@ from Gameboard import Gameboard
 # ---------------------------
 # AGENT
 # ---------------------------
-
 class Agent(object):
 
 	# Constants	
@@ -24,6 +23,17 @@ class Agent(object):
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
 	DIRECTION_LEFT = 4
+
+	# Attributes
+	agentsocket	# Communicates with the game engine
+	conn_alive	# Flag representing connection state
+
+	view		# contains the 5x5 view from the agent's perspective
+	direction	# tracks the agent's direction
+	items		# tracks the agent's current possessed items
+	gameboard	# Component that keeps track of the map known so far (built from views)
+	decisionmaker 	# Component that makes decisions for the agent
+	
 	
 	def __init__(self, portnum):
 		# Create the TCP socket
@@ -44,10 +54,15 @@ class Agent(object):
 		# Set initial direction
 		self.direction = self.DIRECTION_UP
 
+		# Prepare item list
+		self.items = []
+
 		# Prepare the gameboard
 		self.gameboard = Gameboard()
-		
 
+		# Prepare the decision maker
+		self.decisionmaker = DecisionMaker()
+		
 	# Run the main procedure of the agent
 	def run(self):
 		# Initialise the gameboard by reading in initial view
@@ -75,11 +90,23 @@ class Agent(object):
 				# Obtain the view
 				newView = self.readView()
 
-				# Update the map if it has changed
+				# Update the map if the view has changed
+				# Also may be an indication that last action was successful
 				if not self.equalViews(self.view, newView):
-					print "Changed views"	
+
+					# Add the decision to past decisions list
+					self.decisionmaker.addPastAction(userInput)
+		
+					# Check for any items that have been obtained
+					self.checkForObtainedItems(newView)
+	
+					# Update the view and gamemap
 					self.view = newView
 					self.gameboard.updateMap(self.view, userInput)
+
+					# DEBUGGING
+					print "Current items:"
+					print self.items
 
 					print "Map:"
 					self.gameboard.showMap()
@@ -128,6 +155,21 @@ class Agent(object):
 		viewStr += "+-----+"
 		print viewStr
 
+	# Examines the new view to see if the user has picked up any items
+	# and Update the items list as appropriately
+	# Condition for picking up an item: 
+	#	1. An item existed in the tile in front of the player in the previous view
+	#	2. The last action to be made was 'move forward' (assumes this was successful)
+	def checkForObtainedItems(self):
+		if (self.hasItem(self.view, (1,2))) and (self.decisionmaker.getLatestAction() == 'f'):
+			
+			# Obtain and append the item to item list
+			self.items.append(self.view[1][2])
+
+	# ---------------------------
+	# HELPER FUNCTIONS
+	# ---------------------------
+
 	# Compare two views for equivalence
 	# Each view is a list of lists (5x5 2D array).
 	# Returns true or false
@@ -150,7 +192,15 @@ class Agent(object):
 			self.agentsocket.send(userInput)
 		except socket.error, e:
 			print "Error sending: %s" % e
-			self.conn_alive = False
+			self.conn_alive = False	
+
+	# Check whether a particular position (supplied as a tuple) in a view contains an item
+	# ie an axe ('a'), key ('k'), gold ('g'), or stepping stone ('o')
+	def hasItem(self, view, pos):
+		row, col = pos
+		if (view[row][col] == 'a' or view[row][col] == 'k' or view[row][col] == 'g' or view[row][col] == 'o'):
+			return True
+		return False
 
 # ---------------------------
 # MAIN
