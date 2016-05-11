@@ -359,7 +359,7 @@ while not nodepq.empty():
 	else:
 	
 		# Determine list of possible actions from the simulated situation
-		#possible_actions = mv.getAllValidMoves(node.vgameboard.gamemap)
+		#possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 		possible_actions = ['f', 'l', 'r']
 
 		# For each possible action, create a node and insert into priority queue

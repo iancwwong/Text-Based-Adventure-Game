@@ -11,10 +11,10 @@ class MoveValidator(object):
 
 	# Given a game map in the form of a list of lists,
 	# check if a given move is valid
-	def isValid(self, action, gamemap):
+	def isValid(self, action, curr_items, gamemap):
 		pass
 
 	# Given a game map in the form of a list of lists,
 	# return ALL valid moves
-	def getAllValidMoves(self, gamemap):
+	def getAllValidMoves(self, curr_items, gamemap):
 		pass
