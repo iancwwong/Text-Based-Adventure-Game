@@ -184,19 +184,19 @@ class SearchNode(object):
 	action = ''		# Action carried out to reach this node
 	eval_cost = 0		# Cost to reach this node
 	vgameboard = None	# Virtual gameboard
-	nodeID = 0
-	prevNodeID = 0
+	prevNode = None
 	
 	# Constructor, given a virtual gameboard
-	def __init__(self, vgameboard, action, nodeID, prevNodeID):
+	def __init__(self, vgameboard, action, prevNode):
 		self.action = action				# A single char (if '0', init action)
 		self.vgameboard = vgameboard			# Virtual gameboard
 		self.eval_cost = self.evaluateCost()		# Calculate the node cost based on gameboard
-		self.nodeID = nodeID
-		self.prevNodeID = prevNodeID
+		self.prevNode = prevNode
 
 	# For inserting into priority queue
 	def __cmp__(self, otherNode):
+		if otherNode == None:
+			return 1
 		return cmp(self.eval_cost, otherNode.eval_cost)
 	
 	# Calculate the evaluation value of a virtual map
@@ -277,8 +277,8 @@ def equalVGameboards(vgameboard1, vgameboard2):
 # Gameboard is a list of lists
 gameboard = Gameboard()
 gameboard.gamemap = []
-map_row1 = [' ', ' ', ' ', ' ', '~']
-map_row2 = [' ', ' ', 'g', ' ', '~']
+map_row1 = [' ', 'g', ' ', ' ', '~']
+map_row2 = [' ', ' ', ' ', ' ', '~']
 map_row3 = [' ', ' ', '^', ' ', '~']
 map_row4 = ['~', '~', '~', '~', '~']
 map_row5 = ['~', '~', '~', '~', '~']
@@ -291,7 +291,7 @@ gameboard.gamemap.append(map_row5)
 # By default, starting position and current position is at (2,2)
 
 # Assume jason has created:
-goal = { 'x' : 2, 'y' : 1 }
+goal = { 'x' : 1, 'y' : 0 }
 
 # What we know from decisionmaker:
 curr_items = []
@@ -310,8 +310,7 @@ mv = MoveValidator()
 vgameboard = VirtualGameboard(gameboard, curr_items, goal)
 
 # Append initial node to queue
-nodeID = 0
-node = SearchNode(vgameboard, 0, nodeID, -1)	# -1 = prev node id (in this case, no such thing)
+node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
 nodepq.put(node)
 
 print "++ Initial node ++"
@@ -326,13 +325,17 @@ node_list.append(node)
 final_action_list = []
 while not nodepq.empty():
 	node = nodepq.get()
-	nodeID += 1
 
 	if equalPosition(node.vgameboard.curr_position, goal):
+
+		# Show final position
+		print "Final position:"
+		node.show()
+
 		# Backtrack list of nodes to get final list of actions
-		while (node.nodeID != 0):
+		while not node.prevNode == None:
 			final_action_list.append(node.action)
-			node = node_list[node.prevNodeID]
+			node = node.prevNode
 
 		final_action_list.reverse()
 		print "Final list of actions are:"
@@ -343,34 +346,20 @@ while not nodepq.empty():
 	
 		# Determine list of possible actions from the simulated situation
 		#possible_actions = mv.getAllValidMoves(node.vgameboard.gamemap)
-
-		possible_actions = deepcopy(gs.action_list)
-
-		print "Possible actions:"
-		print possible_actions
+		possible_actions = ['f', 'l', 'r']
 
 		# For each possible action, create a node and insert into priority queue
 		for action in possible_actions:
 			tempvgameboard = deepcopy(node.vgameboard)
 			tempvgameboard.simulate(action)
-			newNode = SearchNode(tempvgameboard, action, nodeID, node.nodeID)
-			nodeID += 1
-
-			print "++ Expanded node ++"
-			newNode.show()
-			print ""
+			newNode = SearchNode(tempvgameboard, action, node)
 
 			# Put iff newNode doesn't currently exist in list of nodes
 			if exists(newNode, node_list):
-				print "Node already exists. Gotta ignore it."
-				nodeID -= 1
+				""" Ignore """
 			else:
-				print "Adding node with id %d ..." % newNode.nodeID
 				nodepq.put(newNode, newNode.eval_cost)
 				node_list.append(newNode)
-				print "Number of nodes expanded: %d" % len(node_list)
-
-			print ""	# formatting
 
 print "Darn, no path was found."
 #return []
