@@ -263,7 +263,7 @@ def equalVGameboards(vgameboard1, vgameboard2):
 		return False
 
 	for i in range(0, len(vgameboard1.gamemap)):
-		for j in range(0, len(vgameboard1.gamemap)):
+		for j in range(0, len(vgameboard1.gamemap[i])):
 			if (vgameboard1.gamemap[i][j] != vgameboard2.gamemap[i][j]):
 				return False
 	return True
