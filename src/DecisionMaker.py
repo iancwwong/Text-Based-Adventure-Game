@@ -10,6 +10,8 @@ import GameSymbols as gs
 from Gameboard import Gameboard
 
 class DecisionMaker(object):
+	# Constants
+	null_position = {'x': -1, 'y': -1}
 
 	# Attributes
 	past_actions = []		# a list of past actions (consisting of single chars)
@@ -50,18 +52,19 @@ class DecisionMaker(object):
 		# what is more important to look for/get
 		goal = {}
 
-		# Look for gold if we don't have it yet
-		if not (gs.TILE_GOLD in self.curr_items):
-			for i in range(0, self.gameboard.numRows()):
-				for j in range(0, self.gameboard.numCols()):
-					currpoint = {"x" : j, "y" : i}
-					# if self.gameblahblah == pq.head
-					if(self.gameboard.getTile(currpoint) == gs.TILE_GOLD):
-						goal = currpoint
-
-		# If we have the gold, set goal to be original starting position
-		else:
+		# Case when we have the gold - set starting position to be goal
+		if (gs.TILE_GOLD in self.curr_items):
 			goal = self.gameboard.start_position
+
+		# Prioritise other goals
+		else:
+			# Check whether the gold can be seen on the map
+			gold_pos = self.findGold()
+			if not (self.equalPosition(gold_pos, self.null_position)):
+				goal = gold_pos
+
+			else:
+				pass
 
 		# Perform a search on the current gameboard to determine the list of actions
 		# to reach the gold
@@ -72,6 +75,16 @@ class DecisionMaker(object):
 	# update the current list of items we have in the list
 	def updateCurrItems(self, items):
 		self.curr_items = items
+
+	# Return the position of the gold on gamemap if found.
+	# else return the null_position value
+	def findGold(self):
+		for i in range(0, self.gameboard.numRows()):
+			for j in range(0, self.gameboard.numCols()):
+				currpoint = {"x" : j, "y" : i}
+				if(self.gameboard.getTile(currpoint) == gs.TILE_GOLD):
+					return currpoint
+		return self.null_position
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
