@@ -1,6 +1,8 @@
 # This class validates actions according to the rules of the game
 
 #! /usr/bin/python
+import GameSymbols as gs
+
 class MoveValidator(object):
 	
 	# Constructor
