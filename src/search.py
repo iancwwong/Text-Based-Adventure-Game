@@ -177,9 +177,7 @@ class VirtualGameboard(object):
 		sys.stdout.write(''.join(['-' for i in range(0, numCol)]))
 		print "+"
 		
-# Represents a node whilst searching for a path through the gameboard to a specific goal
-# Contains 4 pieces of information:
-#	
+# Represents a node whilst searching for a path through the gameboard to a specific goal	
 class SearchNode(object):
 
 	# Attributes
