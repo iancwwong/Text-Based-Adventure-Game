@@ -3,11 +3,14 @@
 from Queue import PriorityQueue
 import GameSymbols as gs
 from Gameboard import Gameboard
+from MoveValidator import MoveValidator
 from copy import deepcopy
 import sys
 
 # A simpler version of gameboard ie without starting position
 # Represents the map as a list of lists
+# Like Gameboard, a point is interpreted as:
+#	point = { "x": x, "y": y }
 class VirtualGameboard(object):
 	# Constants
 	# Direction
@@ -35,7 +38,7 @@ class VirtualGameboard(object):
 	# Change the map based on an action
 	# Assumes the action is valid
 	def simulate(self, action):
-		if action == gs.ACTION_FOWARD:
+		if action == gs.ACTION_FORWARD:
 			self.actionForward()
 		elif action == gs.ACTION_RIGHT:
 			self.actionRight()
@@ -45,6 +48,105 @@ class VirtualGameboard(object):
 			self.actionChop()
 		elif action == gs.ACTION_UNLOCK:
 			self.actionUnlock()
+
+	# -------------------------------
+	# Simulation functions
+	# -------------------------------
+
+	# Move the agent forward in a target direction
+	def actionForward(self):
+		newPos = self.movePoint(self.curr_position, self.direction)
+
+		# Check for any items
+		if self.hasItem(newPos):
+			self.items.append(self.getTile(newPos))
+	
+		# Make the old curr_position blank
+		# NOTE: This will simply assume previous position is reachable
+		self.changeTile(self.curr_position, gs.TILE_BLANK)
+		
+		# Update agent's position and icon
+		self.curr_position = newPos
+		self.updatePlayerIcon()
+
+	# Update icon of agent as facing the new direction when turned left
+	def actionLeft(self):
+		self.direction = (self.direction - 1) % 4
+		self.updatePlayerIcon()
+
+	# Update icon of agent as facing the new direction when turned right
+	def actionRight(self):
+		self.direction = (self.direction + 1) % 4
+		self.updatePlayerIcon()
+	
+	# Set position of a tree to be blank
+	def actionChop(self):
+		tree_pos = self.movePoint(self.curr_position, self.direction)
+
+		# Change the door to blank ONLY if position originally contains a door
+		# Else throw an error
+		if (self.getTile(tree_pos) == gs.TILE_TREE):
+			self.changeTile(tree_pos, gs.TILE_BLANK)
+
+	# Set position of a door to be blank
+	def actionUnlock(self):
+		door_pos = self.movePoint(self.curr_position, self.direction)
+
+		# Change the door to blank ONLY if position originally contains a door
+		# Else throw an error
+		if (self.getTile(door_pos) == gs.TILE_DOOR):
+			self.changeTile(door_pos, gs.TILE_BLANK)
+
+	# -----------------------
+	# Map Manipulation
+	# -----------------------
+
+	# Update the player icon according to the direction
+	def updatePlayerIcon(self):
+		if (self.direction == self.DIRECTION_UP):
+			self.changeTile(self.curr_position, gs.PLAYER_UP)
+		elif (self.direction == self.DIRECTION_RIGHT):
+			self.changeTile(self.curr_position, gs.PLAYER_RIGHT)
+		elif (self.direction == self.DIRECTION_DOWN):
+			self.changeTile(self.curr_position, gs.PLAYER_DOWN)
+		elif (self.direction == self.DIRECTION_LEFT):
+			self.changeTile(self.curr_position, gs.PLAYER_LEFT)
+
+
+	# Change a tile to a particular icon
+	def changeTile(self, pos, newTileChar):
+		try:
+			self.gamemap[pos['y']][pos['x']] = newTileChar
+		except IndexError:
+			print "Error: " + pos + " is invalid for current map."
+
+	# -----------------------
+	# Map Info
+	# -----------------------
+
+	# Determine a new point, given it has moved one space in a target direction
+	def movePoint(self, point, direction):
+		newPos = { "x": point['x'], "y": point['y'] }
+		if(direction == self.DIRECTION_UP):
+			newPos['y'] = newPos['y'] - 1
+		elif(direction == self.DIRECTION_DOWN):
+			newPos['y'] = newPos['y'] + 1
+		elif(direction == self.DIRECTION_LEFT):
+			newPos['x'] = newPos['x'] - 1
+		elif(direction == self.DIRECTION_RIGHT):
+			newPos['x'] = newPos['x'] + 1
+		return newPos
+
+	# Return the character at a particular position on the map
+	def getTile(self, point):
+		try:
+			return self.gamemap[point['y']][point['x']]
+		except IndexError:
+			print "Error: " + point + " is invalid for current map."
+
+	# Check whether a particular position has an item
+	def hasItem(self, pos):
+		return (self.getTile(pos) in gs.item_list)
 
 	# Print out details of virtual gameboard
 	def show(self):
@@ -72,36 +174,6 @@ class VirtualGameboard(object):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
 		print " +-----+"
-
-	# -------------------------------
-	# Simulation functions
-	# -------------------------------
-
-	# Move the agent forward in a target direction
-	#def actionForward(self):
-
-	# Turn the agent right
-
-	# Turn the agent left
-	
-	# Chop down a tree
-	
-	# Unlock a door
-
-	# Determine a new point, given it has moved one space in a target direction
-	def movePoint(self, point, direction):
-		newPos = { "x": point['x'], "y": point['y'] }
-		if(direction == self.DIRECTION_UP):
-			newPos['y'] = newPos['y'] - 1
-		elif(direction == self.DIRECTION_DOWN):
-			newPos['y'] = newPos['y'] + 1
-		elif(direction == self.DIRECTION_LEFT):
-			newPos['x'] = newPos['x'] - 1
-		elif(direction == self.DIRECTION_RIGHT):
-			newPos['x'] = newPos['x'] + 1
-		return newPos
-	
-	
 		
 # Represents a node whilst searching for a path through the gameboard to a specific goal
 # Contains 4 pieces of information:
@@ -119,7 +191,7 @@ class SearchNode(object):
 	def __init__(self, vgameboard, action, nodeID, prevNodeID):
 		self.action = action				# A single char (if '0', init action)
 		self.vgameboard = vgameboard			# Virtual gameboard
-		self.eval_cost = self.evaluateCost(vgameboard)	# (Heuristic + cost to reach)
+		self.eval_cost = self.evaluateCost()		# Calculate the node cost based on gameboard
 		self.nodeID = nodeID
 		self.prevNodeID = prevNodeID
 
@@ -127,16 +199,11 @@ class SearchNode(object):
 	def __cmp__(self, otherNode):
 		return cmp(self.eval_cost, otherNode.eval_cost)
 	
-	# Calculate the cost of a virtual map
-	def evaluateCost(self, vgameboard):
+	# Calculate the evaluation value of a virtual map
+	def evaluateCost(self):
 
-		# Calculate heuristic value - Manhattan Distance
-		heuristic_val = abs(vgameboard.curr_position['x'] - vgameboard.goal_position['x']) \
-				+ abs(vgameboard.curr_position['y'] - vgameboard.goal_position['y'])
-
-		# Determine cost to reach this node
-		reach_node_cost = 1
-
+		heuristic_val = self.getHeuristicValue()
+		reach_node_cost = self.getReachCost()
 		return (heuristic_val + reach_node_cost)
 
 	# Print out details of node
@@ -146,13 +213,17 @@ class SearchNode(object):
 		print "Evaluation cost: %d" % self.eval_cost
 		self.vgameboard.show()
 
+	# Use the Manhattan distance to obtain the heuristic value
+	def getHeuristicValue(self):
+		return abs(self.vgameboard.curr_position['x'] - self.vgameboard.goal_position['x']) \
+				+ abs(self.vgameboard.curr_position['y'] - self.vgameboard.goal_position['y'])
+
+	def getReachCost(self):
+		return 1
+
 # -------------------------------
 # helper functions
 # -------------------------------
-
-# determine if an action is valid
-def valid(action, gameboard):
-	return True 	
 
 # Compare two position points for equivalence
 # Both positions are given as points, in the format:
@@ -229,7 +300,11 @@ curr_items = []
 # BEGIN SEARCH FOR LIST OF ACTIONS
 # --------------------------------
 
+# Prepare priority queue
 nodepq = PriorityQueue()
+
+# Prepare a move validator
+mv = MoveValidator()
 
 # Create a virtual gameboard of the initial gameboard state
 vgameboard = VirtualGameboard(gameboard, curr_items, goal)
@@ -267,10 +342,9 @@ while not nodepq.empty():
 	else:
 	
 		# Determine list of possible actions from the simulated situation
-		possible_actions = []
-		for action in gs.action_list:
-			if valid(action, node.vgameboard):
-				possible_actions.append(action)
+		#possible_actions = mv.getAllValidMoves(node.vgameboard.gamemap)
+
+		possible_actions = deepcopy(gs.action_list)
 
 		print "Possible actions:"
 		print possible_actions
