@@ -173,7 +173,9 @@ class VirtualGameboard(object):
 			for j in range(0,len(self.gamemap[i])):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
-		print " +-----+"
+		sys.stdout.write(' +')
+		sys.stdout.write(''.join(['-' for i in range(0, numCol)]))
+		print "+"
 		
 # Represents a node whilst searching for a path through the gameboard to a specific goal
 # Contains 4 pieces of information:
@@ -277,20 +279,34 @@ def equalVGameboards(vgameboard1, vgameboard2):
 # Gameboard is a list of lists
 gameboard = Gameboard()
 gameboard.gamemap = []
-map_row1 = [' ', 'g', ' ', ' ', '~']
-map_row2 = [' ', ' ', ' ', ' ', '~']
-map_row3 = [' ', ' ', '^', ' ', '~']
-map_row4 = ['~', '~', '~', '~', '~']
-map_row5 = ['~', '~', '~', '~', '~']
+map_row0 = [' ', 'g', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row1 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row2 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row3 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row4 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row5 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row6 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row7 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row8 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ']
+map_row9 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
 gameboard.gamemap.append(map_row2)
 gameboard.gamemap.append(map_row3)
 gameboard.gamemap.append(map_row4)
 gameboard.gamemap.append(map_row5)
+gameboard.gamemap.append(map_row6)
+gameboard.gamemap.append(map_row7)
+gameboard.gamemap.append(map_row8)
+gameboard.gamemap.append(map_row9)
 
-# By default, starting position and current position is at (2,2)
+# Set current position
+gameboard.curr_position = { 'x': 8, 'y': 8 }
 
-# Assume jason has created:
+# Set direction
+gameboard.direction = Gameboard.DIRECTION_LEFT
+
+# Assume jason has created
 goal = { 'x' : 1, 'y' : 0 }
 
 # What we know from decisionmaker:
@@ -313,7 +329,7 @@ vgameboard = VirtualGameboard(gameboard, curr_items, goal)
 node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
 nodepq.put(node)
 
-print "++ Initial node ++"
+print "Initial Position:"
 node.show()
 print ""
 
