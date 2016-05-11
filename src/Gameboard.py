@@ -241,7 +241,9 @@ class Gameboard(object):
 			for j in range(0,len(self.gamemap[i])):
 				sys.stdout.write(self.gamemap[i][j])
 			print "|"
-		print " +-----+"
+		sys.stdout.write(' +')
+		sys.stdout.write(''.join(['-' for i in range(0, numCol)]))
+		print "+"
 
 	# Determine a new point, given it has moved one space in a target direction
 	def movePoint(self, point, direction):
