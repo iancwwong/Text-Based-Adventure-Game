@@ -1,4 +1,9 @@
 # This is the class that represents the decision making component of the agent
+#
+# Note: A 'position' is represented as a dict, in the format:
+#	position = { 'x': X, 'y': Y }
+# Note: A 'high level goal' is represented as a tuple, in the format:
+#	highLevelGoal = (<TYPE>, <POSITION>)
 
 #! /usr/bin/python
 
@@ -12,6 +17,12 @@ from Gameboard import Gameboard
 class DecisionMaker(object):
 	# Constants
 	null_position = {'x': -1, 'y': -1}
+	
+	# High Level Goal types
+	GOALTYPE_REACH = 1
+	GOALTYPE_GET_ITEM = 2
+	GOALTYPE_EXPLORE = 3
+	GOALTYPE_ELIMINATE_OBSTACLE = 4
 
 	# Attributes
 	past_actions = []		# a list of past actions (consisting of single chars)
@@ -48,27 +59,29 @@ class DecisionMaker(object):
 
 	# determine the most appropriate action to perform next at any given time
 	def determineActions(self):
-		# determine our goal position
-		# what is more important to look for/get
-		goal = {}
+		# Holds our 'high level goal'
+		goal = ()
 
 		# Case when we have the gold - set starting position to be goal
 		if (gs.TILE_GOLD in self.curr_items):
-			goal = self.gameboard.start_position
-
+			goal = (self.GOALTYPE_REACH, self.gameboard.start_position)
+			
 		# Prioritise other goals
 		else:
 			# Check whether the gold can be seen on the map
-			gold_pos = self.findGold()
-			if not (self.equalPosition(gold_pos, self.null_position)):
-				goal = gold_pos
+			goldPos = self.findGold()
+			if not (self.equalPosition(goldPos, self.null_position)):
+				goal = (self.GOALTYPE_GET_ITEM, goldPos)
 
 			else:
 				pass
 
 		# Perform a search on the current gameboard to determine the list of actions
 		# to reach the gold
-		self.todo_actions.extend(self.getSearchActions(goal, self.gameboard))
+		newActions = self.getReachGoalActions(goal, self.gameboard)		# What if no path is found, ie newActions is empty?
+		self.todo_actions.extend(newActions)
+
+		# Debugging
 		print "List of todo actions:"
 		print self.todo_actions
 
@@ -90,8 +103,11 @@ class DecisionMaker(object):
 	# NODE SEARCHING FUNCTIONS
 	# ----------------------------------
 	
-	# Perform A* search on current gameboard to reach a given goal position
-	def getSearchActions(self, goal, gameboard):
+	# Perform A* search on current gameboard to determine list of actions to reach a given high level goal
+	def getReachGoalActions(self, goal, gameboard):
+
+		# Parse the goal type and the position associated with the goal
+		goalType, goalPos = goal
 
 		# Prepare priority queue
 		nodepq = PriorityQueue()
@@ -100,7 +116,7 @@ class DecisionMaker(object):
 		mv = MoveValidator()
 
 		# Create a virtual gameboard of the initial gameboard state
-		vgameboard = VirtualGameboard(gameboard, self.curr_items, goal)
+		vgameboard = VirtualGameboard(gameboard, self.curr_items, goalPos)
 
 		# Append initial node to queue
 		node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
@@ -119,7 +135,8 @@ class DecisionMaker(object):
 		while not nodepq.empty():
 			node = nodepq.get()
 
-			if self.equalPosition(node.vgameboard.curr_position, goal):
+			# Compare the agent's position AND direction in the case when highLevelGoal is of type 'ELIMINATE_OBSTACLE'
+			if self.equalPosition(node.vgameboard.curr_position, goalPos):
 
 				# Show final position
 				print "Final position:"
