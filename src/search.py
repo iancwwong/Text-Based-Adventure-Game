@@ -57,9 +57,16 @@ class VirtualGameboard(object):
 	def actionForward(self):
 		newPos = self.movePoint(self.curr_position, self.direction)
 
+
 		# Check for any items
 		if self.hasItem(newPos):
 			self.items.append(self.getTile(newPos))
+
+		# Check for any items lost
+		# Case when tile in front is water, and we have a stepping stone
+		#	 - Remove the stone
+		if (self.getTile(newPos) == gs.TILE_WATER) and (gs.TILE_STEPPING_STONE in self.items):
+			self.items.remove(gs.TILE_STEPPING_STONE)
 
 		# Make the old curr_position blank
 		# NOTE: This will simply assume previous position is reachable
@@ -215,8 +222,30 @@ class SearchNode(object):
 
 	# Use the Manhattan distance to obtain the heuristic value
 	def getHeuristicValue(self):
-		return abs(self.vgameboard.curr_position['x'] - self.vgameboard.goal_position['x']) \
-				+ abs(self.vgameboard.curr_position['y'] - self.vgameboard.goal_position['y'])
+		differenceX = self.vgameboard.curr_position['x'] - self.vgameboard.goal_position['x']
+		differenceY = self.vgameboard.curr_position['y'] - self.vgameboard.goal_position['y']
+		finalHeuristicValue = abs(differenceX) + abs(differenceY)
+
+		# do we need to do at least 1 turn?
+		diffCol = not (abs(differenceX) == 0)
+		diffRow = not (abs(differenceY) == 0)
+		if (diffCol and diffRow):
+			finalHeuristicValue += 1
+
+		# is the goal NE, NW, SE, SW of curr_pos
+		if differenceX < 0 and differenceY > 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_LEFT]:
+				finalHeuristicValue += 1
+		elif differenceX > 0 and differenceY > 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_RIGHT]:
+				finalHeuristicValue += 1
+		elif differenceX < 0 and differenceY < 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_LEFT]:
+				finalHeuristicValue += 1
+		elif differenceX > 0 and differenceY < 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_RIGHT]:
+				finalHeuristicValue += 1
+		return finalHeuristicValue
 
 	def getReachCost(self):
 		return 1
@@ -277,12 +306,12 @@ def equalVGameboards(vgameboard1, vgameboard2):
 # Gameboard is a list of lists
 gameboard = Gameboard()
 gameboard.gamemap = []
-map_row0 = ['.', '.', '.', '.', '.', '.']
-map_row1 = ['.', ' ', ' ', ' ', ' ', '.']
-map_row2 = ['.', ' ', ' ', '*', ' ', '.']
-map_row3 = ['.', ' ', '*', '*', 'T', '.']
-map_row4 = ['.', 'g', '*', '<', 'a', '.']
-map_row5 = ['.', '.', '.', '.', '.', '.']
+map_row0 = ['.', '.', '.', '.', '.', '.', '.']
+map_row1 = ['.', ' ', ' ', 'g', ' ', ' ', '.']
+map_row2 = ['.', ' ', '*', ' ', ' ', ' ', '.']
+map_row3 = ['.', ' ', '*', '*', '*', 'T', '.']
+map_row4 = ['.', ' ', '~', '<', 'a', 'o', '.']
+map_row5 = ['.', '.', '.', '.', '.', '.', '.']
 gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
 gameboard.gamemap.append(map_row2)
@@ -297,7 +326,7 @@ gameboard.curr_position = { 'x': 3, 'y': 4 }
 gameboard.direction = Gameboard.DIRECTION_LEFT
 
 # Assume jason has created
-goal = { 'x' : 1, 'y' : 4 }
+goal = { 'x' : 3, 'y' : 1 }
 
 # What we know from decisionmaker:
 curr_items = []
@@ -353,7 +382,7 @@ while not nodepq.empty():
 		# Determine list of possible actions from the simulated situation
 		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 		#possible_actions = ['f', 'l', 'r']
-		
+
 		node.show()
 		# For each possible action, create a node and insert into priority queue
 		for action in possible_actions:
