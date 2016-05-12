@@ -276,6 +276,12 @@ class VirtualGameboard(object):
 		# Check for any items
 		if self.hasItem(newPos):
 			self.items.append(self.getTile(newPos))
+
+		# Check for any items lost
+		# Case when tile in front is water, and we have a stepping stone
+		#	 - Remove the stone
+		if (self.getTile(newPos) == gs.TILE_WATER) and (gs.TILE_STEPPING_STONE in self.items):
+			self.items.remove(gs.TILE_STEPPING_STONE)
 	
 		# Make the old curr_position blank
 		# NOTE: This will simply assume previous position is reachable
