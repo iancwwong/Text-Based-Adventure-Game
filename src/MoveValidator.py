@@ -28,7 +28,7 @@ class MoveValidator(object):
 			x += 1
 		if(player['dir'] == gs.PLAYER_LEFT):
 			x -= 1
-		print "checking: (%d, %d) has '%c'" % (x, y, gamemap[y][x])
+
 		if(action == gs.ACTION_FORWARD):
 			if gamemap[y][x] == gs.TILE_WATER:
 				if(gs.TILE_STEPPING_STONE not in curr_items):

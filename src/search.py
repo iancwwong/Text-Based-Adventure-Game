@@ -280,8 +280,8 @@ gameboard.gamemap = []
 map_row0 = ['.', '.', '.', '.', '.', '.']
 map_row1 = ['.', ' ', ' ', ' ', ' ', '.']
 map_row2 = ['.', ' ', ' ', '*', ' ', '.']
-map_row3 = ['.', ' ', '*', '*', ' ', '.']
-map_row4 = ['.', 'g', '*', '<', ' ', '.']
+map_row3 = ['.', ' ', '*', '*', 'T', '.']
+map_row4 = ['.', 'g', '*', '<', 'a', '.']
 map_row5 = ['.', '.', '.', '.', '.', '.']
 gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
@@ -353,8 +353,7 @@ while not nodepq.empty():
 		# Determine list of possible actions from the simulated situation
 		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 		#possible_actions = ['f', 'l', 'r']
-
-		print possible_actions
+		
 		node.show()
 		# For each possible action, create a node and insert into priority queue
 		for action in possible_actions:
