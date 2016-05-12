@@ -37,7 +37,6 @@ class DecisionMaker(object):
 		self.todo_actions = []
 		self.curr_items = []
 
-
 	# Appends a given action (assumed to be a single char)
 	def addPastAction(self, action_char):
 		self.past_actions.append(action_char)
@@ -93,7 +92,7 @@ class DecisionMaker(object):
 			
 		self.todo_actions.extend(newActions)
 
-		# Debugging
+		# DEBUGGING
 		print "List of todo actions:"
 		print self.todo_actions
 
@@ -134,6 +133,7 @@ class DecisionMaker(object):
 		node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
 		nodepq.put(node)
 
+		# DEBUGGING
 		print "Initial Position:"
 		node.show()
 		print ""
@@ -150,7 +150,7 @@ class DecisionMaker(object):
 			# Compare the agent's position AND direction in the case when highLevelGoal is of type 'ELIMINATE_OBSTACLE'
 			if self.equalPosition(node.vgameboard.curr_position, goalPos):
 
-				# Show final position
+				# DEBUGGING
 				print "Final position:"
 				node.show()
 
@@ -160,8 +160,11 @@ class DecisionMaker(object):
 					node = node.prevNode
 
 				final_action_list.reverse()
+
+				# DEBUGGING
 				print "Final list of actions are:"
 				print final_action_list
+
 				return final_action_list
 			else:
 	
@@ -181,6 +184,7 @@ class DecisionMaker(object):
 						nodepq.put(newNode, newNode.eval_cost)
 						node_list.append(newNode)
 
+		# DEBUGGING
 		print "Darn, no path was found."
 		return []
 
@@ -485,10 +489,12 @@ class SearchNode(object):
 		
 		# Case when agent is not facing the 'general direction' to goal - need to turn at least once
 		else:
-				finalHeuristicValue += 1
+			finalHeuristicValue += 1
 
 		return finalHeuristicValue
 
+	# Cost to reach this node based on the cost of the action itself
+	# Currently the cost of an action is 1
 	def getReachCost(self):
 		return 1
 

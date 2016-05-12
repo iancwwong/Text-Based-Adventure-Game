@@ -5,7 +5,7 @@
 #  Agent for Text-Based Adventure Game
 #  COMP3411 Artificial Intelligence
 #  UNSW Session 1, 2016
-#  Written by: Ian Wong
+#  Written by: Ian Wong and Jason Ng
 #  Date: 26/04/2016
 # -------------------------------------------------------
 
