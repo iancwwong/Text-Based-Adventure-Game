@@ -435,10 +435,75 @@ class SearchNode(object):
 		print "Evaluation cost: %d" % self.eval_cost
 		self.vgameboard.show()
 
-	# Use the Manhattan distance to obtain the heuristic value
+	# Calculate the heuristic value by analysing the gameboard's state
+	# Currently based on:
+	#	- Manhattan distance
+	# 	- Whether agent should conduct any turns
 	def getHeuristicValue(self):
-		return abs(self.vgameboard.curr_position['x'] - self.vgameboard.goal_position['x']) \
-				+ abs(self.vgameboard.curr_position['y'] - self.vgameboard.goal_position['y'])
+
+		# Holds the final heuristic value
+		finalHeuristicValue = 0
+
+		# Prepare for the heuristic processing
+		differenceX = self.vgameboard.curr_position['x'] - self.vgameboard.goal_position['x']
+		differenceY = self.vgameboard.curr_position['y'] - self.vgameboard.goal_position['y']
+	
+		# Calculate manhattan distance
+		manhatt_dist = abs(differenceX) + abs(differenceY)
+		finalHeuristicValue += manhatt_dist
+
+		# Check whether the agent needs to make at least 1 turn to reach the goal
+		diffCol = not (abs(differenceX) == 0)
+		diffRow = not (abs(differenceY) == 0)
+		if (diffCol and diffRow):
+			finalHeuristicValue += 1
+
+		# Check whether the agent is facing in a 'general direction' to the goal.
+		# If not, then add 1 to heuristic value (as agent needs to turn at least once on its path to goal)
+		# Case when goal is NE of agent
+		if differenceX < 0 and differenceY > 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_LEFT]:
+				finalHeuristicValue += 1
+			else:
+
+				# Check whether a wall or the map edge is in front of the agent
+				# If so, then add 1 to heuristic value (as agent needs to turn at least once to get away from
+				# the wall / map edge)
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
+
+		#Case when goal is NW of agent
+		elif differenceX > 0 and differenceY > 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_RIGHT]:
+				finalHeuristicValue += 1
+			else:
+				# Check whether wall or map edge is in front of the agent
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
+
+		# Case when goal is SE of agent
+		elif differenceX < 0 and differenceY < 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_LEFT]:
+				finalHeuristicValue += 1
+			else:
+				# Check whether wall or map edge is in front of the agent
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
+
+		# Case when goal is SW of agent
+		elif differenceX > 0 and differenceY < 0:
+			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_RIGHT]:
+				finalHeuristicValue += 1
+			else:
+				# Check whether wall or map edge is in front of the agent
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
+
+		return finalHeuristicValue
 
 	def getReachCost(self):
 		return 1
