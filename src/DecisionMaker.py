@@ -79,6 +79,18 @@ class DecisionMaker(object):
 		# Perform a search on the current gameboard to determine the list of actions
 		# to reach the gold
 		newActions = self.getReachGoalActions(goal, self.gameboard)		# What if no path is found, ie newActions is empty?
+
+		# Case when search path empty - no path found
+		while len(newActions) == 0:
+			# Choose another goal, and re-search
+			# goal = some new goal
+			# newActions = self.getReachGoalActions(goal, self.gameboard)
+
+			sys.stdout.write("No path found to reach goal: ")
+			print goal
+			print "Exiting..."
+			exit()		
+			
 		self.todo_actions.extend(newActions)
 
 		# Debugging
@@ -154,8 +166,8 @@ class DecisionMaker(object):
 			else:
 	
 				# Determine list of possible actions from the simulated situation
-				#possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
-				possible_actions = ['f', 'l', 'r']
+				possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+				#possible_actions = ['f', 'l', 'r']
 
 				# For each possible action, create a node and insert into priority queue
 				for action in possible_actions:
