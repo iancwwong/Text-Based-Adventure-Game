@@ -118,7 +118,7 @@ class VirtualGameboard(object):
 		try:
 			self.gamemap[pos['y']][pos['x']] = newTileChar
 		except IndexError:
-			print "Error: " + pos + " is invalid for current map."
+			print "Error: (%d, %d) is invalid for current map." % (pos['x'], pos['y'])
 
 	# -----------------------
 	# Map Info
@@ -142,7 +142,7 @@ class VirtualGameboard(object):
 		try:
 			return self.gamemap[point['y']][point['x']]
 		except IndexError:
-			print "Error: " + point + " is invalid for current map."
+			print "Error: (%d, %d) is invalid for current map." % (point['y'], point['x'])
 
 	# Check whether a particular position has an item
 	def hasItem(self, pos):
@@ -277,35 +277,27 @@ def equalVGameboards(vgameboard1, vgameboard2):
 # Gameboard is a list of lists
 gameboard = Gameboard()
 gameboard.gamemap = []
-map_row0 = [' ', 'g', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row1 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row2 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row3 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row4 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row5 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row6 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row7 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-map_row8 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '<', ' ']
-map_row9 = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+map_row0 = ['.', '.', '.', '.', '.', '.']
+map_row1 = ['.', ' ', ' ', ' ', ' ', '.']
+map_row2 = ['.', ' ', ' ', '*', ' ', '.']
+map_row3 = ['.', ' ', '*', '*', ' ', '.']
+map_row4 = ['.', 'g', '*', '<', ' ', '.']
+map_row5 = ['.', '.', '.', '.', '.', '.']
 gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
 gameboard.gamemap.append(map_row2)
 gameboard.gamemap.append(map_row3)
 gameboard.gamemap.append(map_row4)
 gameboard.gamemap.append(map_row5)
-gameboard.gamemap.append(map_row6)
-gameboard.gamemap.append(map_row7)
-gameboard.gamemap.append(map_row8)
-gameboard.gamemap.append(map_row9)
 
 # Set current position
-gameboard.curr_position = { 'x': 8, 'y': 8 }
+gameboard.curr_position = { 'x': 3, 'y': 4 }
 
 # Set direction
 gameboard.direction = Gameboard.DIRECTION_LEFT
 
 # Assume jason has created
-goal = { 'x' : 1, 'y' : 0 }
+goal = { 'x' : 1, 'y' : 4 }
 
 # What we know from decisionmaker:
 curr_items = []
@@ -362,6 +354,8 @@ while not nodepq.empty():
 		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 		#possible_actions = ['f', 'l', 'r']
 
+		print possible_actions
+		node.show()
 		# For each possible action, create a node and insert into priority queue
 		for action in possible_actions:
 			tempvgameboard = deepcopy(node.vgameboard)

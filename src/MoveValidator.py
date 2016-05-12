@@ -19,6 +19,7 @@ class MoveValidator(object):
 		player = self.findPlayer(gamemap)
 		x = player['x']
 		y = player['y']
+
 		if(player['dir'] == gs.PLAYER_UP):
 			y -= 1
 		if(player['dir'] == gs.PLAYER_DOWN):
@@ -27,26 +28,27 @@ class MoveValidator(object):
 			x += 1
 		if(player['dir'] == gs.PLAYER_LEFT):
 			x -= 1
+		print "checking: (%d, %d) has '%c'" % (x, y, gamemap[y][x])
 		if(action == gs.ACTION_FORWARD):
-			if gamemap[x][y] == gs.TILE_WATER:
+			if gamemap[y][x] == gs.TILE_WATER:
 				if(gs.TILE_STEPPING_STONE not in curr_items):
 					return False
-			elif gamemap[x][y] == gs.TILE_DOOR:
+			elif gamemap[y][x] == gs.TILE_DOOR:
 				return False
-			elif gamemap[x][y] == gs.TILE_TREE:
+			elif gamemap[y][x] == gs.TILE_TREE:
 				return False
-			elif gamemap[x][y] == gs.TILE_WALL:
+			elif gamemap[y][x] == gs.TILE_WALL:
 				return False
-			elif gamemap[x][y] == gs.TILE_MAP_EDGE:
+			elif gamemap[y][x] == gs.TILE_MAP_EDGE:
 				return False
 		if(action == gs.ACTION_CHOP):
-			if gamemap[x][y] == gs.TILE_TREE:
+			if gamemap[y][x] == gs.TILE_TREE:
 				if(gs.TILE_AXE not in curr_items):
 					return False
 			else:
 				return False
 		if(action == gs.ACTION_UNLOCK):
-			if gamemap[x][y] == gs.TILE_DOOR:
+			if gamemap[y][x] == gs.TILE_DOOR:
 				if(gs.TILE_KEY not in curr_items):
 					return False
 			else:
@@ -59,23 +61,23 @@ class MoveValidator(object):
 			for j in range(0, len(gamemap[0])):
 				if(gamemap[i][j] == gs.PLAYER_UP):
 					player['dir'] = gs.PLAYER_UP
-					player['x'] = i
-					player['y'] = j
+					player['x'] = j
+					player['y'] = i
 					return player
 				elif(gamemap[i][j] == gs.PLAYER_RIGHT):
 					player['dir'] = gs.PLAYER_RIGHT
-					player['x'] = i
-					player['y'] = j
+					player['x'] = j
+					player['y'] = i
 					return player
 				elif(gamemap[i][j] == gs.PLAYER_DOWN):
 					player['dir'] = gs.PLAYER_DOWN
-					player['x'] = i
-					player['y'] = j
+					player['x'] = j
+					player['y'] = i
 					return player
 				elif(gamemap[i][j] == gs.PLAYER_LEFT):
 					player['dir'] = gs.PLAYER_LEFT
-					player['x'] = i
-					player['y'] = j
+					player['x'] = j
+					player['y'] = i
 					return player
 	# Given a game map in the form of a list of lists,
 	# return ALL valid moves
