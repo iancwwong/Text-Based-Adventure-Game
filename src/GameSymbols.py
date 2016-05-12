@@ -3,6 +3,7 @@
 
 # Tiles
 TILE_WALL = '*'
+TILE_MAP_EDGE = '.'
 TILE_WATER = '~'
 TILE_DOOR = '-'
 TILE_TREE = 'T'
