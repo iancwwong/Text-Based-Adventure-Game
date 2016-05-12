@@ -236,15 +236,32 @@ class SearchNode(object):
 		if differenceX < 0 and differenceY > 0:
 			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_LEFT]:
 				finalHeuristicValue += 1
+			else:
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
 		elif differenceX > 0 and differenceY > 0:
 			if self.vgameboard.direction in [self.vgameboard.DIRECTION_DOWN, self.vgameboard.DIRECTION_RIGHT]:
 				finalHeuristicValue += 1
+			else:
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
 		elif differenceX < 0 and differenceY < 0:
 			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_LEFT]:
 				finalHeuristicValue += 1
+			else:
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
 		elif differenceX > 0 and differenceY < 0:
 			if self.vgameboard.direction in [self.vgameboard.DIRECTION_UP, self.vgameboard.DIRECTION_RIGHT]:
 				finalHeuristicValue += 1
+			else:
+				agentFrontPos = self.vgameboard.movePoint(self.vgameboard.curr_position, self.vgameboard.direction)
+				if self.vgameboard.getTile(agentFrontPos) in [gs.TILE_WALL, gs.TILE_MAP_EDGE]:
+					finalHeuristicValue += 1
+
 		return finalHeuristicValue
 
 	def getReachCost(self):
