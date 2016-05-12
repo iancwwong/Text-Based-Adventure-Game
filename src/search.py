@@ -18,14 +18,14 @@ class VirtualGameboard(object):
 	DIRECTION_RIGHT = 1
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
-	
+
 	# Attributes
 	gamemap = [] 		# view of the map (explored so far) (assumed to be rectangular)
 	direction = 0
 	curr_position = {}
 	goal_position = {}
 	items = []
-	
+
 	# Constructor - make an exact copy of the current gameboard, but without start position
 	def __init__(self, gameboard, items, goal):
 		# copy over all the details from gameboard
@@ -60,11 +60,11 @@ class VirtualGameboard(object):
 		# Check for any items
 		if self.hasItem(newPos):
 			self.items.append(self.getTile(newPos))
-	
+
 		# Make the old curr_position blank
 		# NOTE: This will simply assume previous position is reachable
 		self.changeTile(self.curr_position, gs.TILE_BLANK)
-		
+
 		# Update agent's position and icon
 		self.curr_position = newPos
 		self.updatePlayerIcon()
@@ -78,7 +78,7 @@ class VirtualGameboard(object):
 	def actionRight(self):
 		self.direction = (self.direction + 1) % 4
 		self.updatePlayerIcon()
-	
+
 	# Set position of a tree to be blank
 	def actionChop(self):
 		tree_pos = self.movePoint(self.curr_position, self.direction)
@@ -176,8 +176,8 @@ class VirtualGameboard(object):
 		sys.stdout.write(' +')
 		sys.stdout.write(''.join(['-' for i in range(0, numCol)]))
 		print "+"
-		
-# Represents a node whilst searching for a path through the gameboard to a specific goal	
+
+# Represents a node whilst searching for a path through the gameboard to a specific goal
 class SearchNode(object):
 
 	# Attributes
@@ -185,7 +185,7 @@ class SearchNode(object):
 	eval_cost = 0		# Cost to reach this node
 	vgameboard = None	# Virtual gameboard
 	prevNode = None
-	
+
 	# Constructor, given a virtual gameboard
 	def __init__(self, vgameboard, action, prevNode):
 		self.action = action				# A single char (if '0', init action)
@@ -198,7 +198,7 @@ class SearchNode(object):
 		if otherNode == None:
 			return 1
 		return cmp(self.eval_cost, otherNode.eval_cost)
-	
+
 	# Calculate the evaluation value of a virtual map
 	def evaluateCost(self):
 
@@ -256,7 +256,7 @@ def equalVGameboards(vgameboard1, vgameboard2):
 	# Item list
 	if not (set(vgameboard1.items) == set(vgameboard2.items)):
 		return False
-	
+
 	# Gamemap
 	if (len(vgameboard1.gamemap) != len(vgameboard2.gamemap)) or \
 	   (len(vgameboard1.gamemap[0]) != len(vgameboard2.gamemap[0])):
@@ -357,10 +357,10 @@ while not nodepq.empty():
 		#return final_action_list
 		exit()
 	else:
-	
+
 		# Determine list of possible actions from the simulated situation
-		#possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
-		possible_actions = ['f', 'l', 'r']
+		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+		#possible_actions = ['f', 'l', 'r']
 
 		# For each possible action, create a node and insert into priority queue
 		for action in possible_actions:
