@@ -29,27 +29,27 @@ class MoveValidator(object):
 			x -= 1
 		if(action == gs.ACTION_FORWARD):
 			if gamemap[x][y] == gs.TILE_WATER:
-				if(gs.TITLE_STEPPING_STONE not in curr_items):
+				if(gs.TILE_STEPPING_STONE not in curr_items):
+					return False
+			elif gamemap[x][y] == gs.TILE_DOOR:
 				return False
-			elif gamemap[x][y] == gs.TITLE_DOOR:
+			elif gamemap[x][y] == gs.TILE_TREE:
 				return False
-			elif gamemap[x][y] == gs.TITLE_TREE:
+			elif gamemap[x][y] == gs.TILE_WALL:
 				return False
-			elif action[x][y] == gs.TITLE_WALL:
-				return False
-			elif action[x][y] == gs.TITLE_MAP_EDGE:
+			elif gamemap[x][y] == gs.TILE_MAP_EDGE:
 				return False
 		if(action == gs.ACTION_CHOP):
 			if gamemap[x][y] == gs.TILE_TREE:
-				if(gs.TITLE_AXE not in curr_items):
+				if(gs.TILE_AXE not in curr_items):
 					return False
-			elif
+			else:
 				return False
 		if(action == gs.ACTION_UNLOCK):
-			if gamemap[x][y] == gs.TITLE_DOOR:
-				if(gs.TITLE_KEY not in curr_items):
+			if gamemap[x][y] == gs.TILE_DOOR:
+				if(gs.TILE_KEY not in curr_items):
 					return False
-			elif
+			else:
 				return False
 		return True
 
@@ -80,4 +80,4 @@ class MoveValidator(object):
 	# Given a game map in the form of a list of lists,
 	# return ALL valid moves
 	def getAllValidMoves(self, curr_items, gamemap):
-		pass
+		return [a for a in gs.action_list if self.isValid(a, curr_items, gamemap)]
