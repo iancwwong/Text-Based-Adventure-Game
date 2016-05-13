@@ -29,7 +29,9 @@ class DecisionMaker(object):
 	todo_actions = []		# a list of actions to perform
 	curr_items = []			# a list of items we currently possess
 	target_items = []		# a list of items to get in order to obtain the gold
+	curr_goal = ()			# a tuple that contains the current goal
 	gameboard = None 		# gameboard containing current environment state
+	mv = None 				# Move validator
 
 	# Constructor
 	def __init__(self, gameboard):
@@ -38,6 +40,9 @@ class DecisionMaker(object):
 		self.todo_actions = []
 		self.curr_items = []
 		self.target_items = []
+		self.curr_goal = ()
+		self.target_items = []
+		self.mv = MoveValidator()
 
 	# Appends a given action (assumed to be a single char)
 	def addPastAction(self, action_char):
@@ -85,6 +90,9 @@ class DecisionMaker(object):
 		print "List of todo actions:"
 		print self.todo_actions
 
+		# Remember current goal
+		self.curr_goal = goal
+
 	# update the current list of items we have in the list
 	def updateCurrItems(self, items):
 		self.curr_items = items
@@ -105,10 +113,12 @@ class DecisionMaker(object):
 			# Check whether the gold can be seen on the map
 			goldPos = self.findGold()
 			if not (self.equalPosition(goldPos, self.null_position)):
-				return = (self.GOALTYPE_GET_ITEM, goldPos)
+				return (self.GOALTYPE_GET_ITEM, goldPos)
 
+			# Gold cannot be seen - explore
 			else:
-				pass
+				explorePosition = self.getExplorePosition()
+				return (self.GOALTYPE_EXPLORE, explorePosition)
 
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
@@ -119,6 +129,14 @@ class DecisionMaker(object):
 				if(self.gameboard.getTile(currpoint) == gs.TILE_GOLD):
 					return currpoint
 		return self.null_position
+
+	# Return a 'most promising' position to reach on the map for the purpose
+	# of:
+	#	* expanding the map
+	#	* getting more detail about area around a specific position
+	# NOTE: Should ALWAYS return a reachable position
+	def getExplorePosition(self, *targetPos):
+		pass
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -132,9 +150,6 @@ class DecisionMaker(object):
 
 		# Prepare priority queue
 		nodepq = PriorityQueue()
-
-		# Prepare a move validator
-		mv = MoveValidator()
 
 		# Create a virtual gameboard of the initial gameboard state
 		vgameboard = VirtualGameboard(gameboard, self.curr_items, goalPos)
@@ -179,7 +194,7 @@ class DecisionMaker(object):
 			else:
 	
 				# Determine list of possible actions from the simulated situation
-				possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+				possible_actions = self.mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 
 				# For each possible action, create a node and insert into priority queue
 				for action in possible_actions:

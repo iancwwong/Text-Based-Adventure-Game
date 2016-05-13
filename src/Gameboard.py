@@ -147,7 +147,7 @@ class Gameboard(object):
 	def expandRight(self):
 		numRow = len(self.gamemap)
 		for i in range(0,numRow):
-			self.gamemap[i].append("?")
+			self.gamemap[i].append(gs.TILE_UNKNOWN)
 
 	# Expand the map by adding in a column on the left
 	def expandLeft(self):
