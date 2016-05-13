@@ -72,16 +72,11 @@ class DecisionMaker(object):
 		# to reach the gold
 		newActions = self.getReachGoalActions(goal, self.gameboard)		# What if no path is found, ie newActions is empty?
 
-		# Case when search path empty - no path found
-		while len(newActions) == 0:
-			# Choose another goal, and re-search
-			# goal = some new goal
-			# newActions = self.getReachGoalActions(goal, self.gameboard)
-
-			sys.stdout.write("No path found to reach goal: ")
-			print goal
-			print "Exiting..."
-			exit()		
+		# DEBUGGING
+		sys.stdout.write("Goal: ")
+		print goal
+		sys.stdout.write("Actions to reach this goal: ")
+		print newActions	
 			
 		self.todo_actions.extend(newActions)
 
