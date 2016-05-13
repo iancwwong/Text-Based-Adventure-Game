@@ -28,7 +28,8 @@ class DecisionMaker(object):
 	past_actions = []		# a list of past actions (consisting of single chars)
 	todo_actions = []		# a list of actions to perform
 	curr_items = []			# a list of items we currently possess
-	gameboard = None
+	target_items = []		# a list of items to get in order to obtain the gold
+	gameboard = None 		# gameboard containing current environment state
 
 	# Constructor
 	def __init__(self, gameboard):
@@ -36,6 +37,7 @@ class DecisionMaker(object):
 		self.gameboard = gameboard
 		self.todo_actions = []
 		self.curr_items = []
+		self.target_items = []
 
 	# Appends a given action (assumed to be a single char)
 	def addPastAction(self, action_char):
@@ -56,8 +58,7 @@ class DecisionMaker(object):
 			self.determineActions()
 		return self.todo_actions.pop(0)
 
-	# determine the most appropriate action to perform next at any given time
-	# Always return at least one action
+	# Determine the goal and the actions to reach that goal
 	def determineActions(self):
 
 		# Holds our final list of actions
