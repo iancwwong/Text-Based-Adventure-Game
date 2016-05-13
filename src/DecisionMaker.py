@@ -57,23 +57,16 @@ class DecisionMaker(object):
 		return self.todo_actions.pop(0)
 
 	# determine the most appropriate action to perform next at any given time
+	# Always return at least one action
 	def determineActions(self):
-		# Holds our 'high level goal'
-		goal = ()
 
-		# Case when we have the gold - set starting position to be goal
-		if (gs.TILE_GOLD in self.curr_items):
-			goal = (self.GOALTYPE_REACH, self.gameboard.start_position)
-			
-		# Prioritise other goals
-		else:
-			# Check whether the gold can be seen on the map
-			goldPos = self.findGold()
-			if not (self.equalPosition(goldPos, self.null_position)):
-				goal = (self.GOALTYPE_GET_ITEM, goldPos)
+		# Holds our final list of actions
+		newActions = []
 
-			else:
-				pass
+		# Determine our goal
+		# NOTE: This may conduct multiple A* searches to determine whether or not it . However
+		# 		we decided to trade move efficiency for time efficiency
+		goal = self.determineGoal()
 
 		# Perform a search on the current gameboard to determine the list of actions
 		# to reach the gold
@@ -99,6 +92,27 @@ class DecisionMaker(object):
 	# update the current list of items we have in the list
 	def updateCurrItems(self, items):
 		self.curr_items = items
+
+	# Determine a goal based on decision making flowchart
+	# Returns a goal that is GUARANTEED to be reachable
+	# Goal is a 'high level goal', ie a tuple in the format:
+	#		goal = ( <goal type>, <goal position> )
+	# NOTE: This may conduct multiple A* searches to determine whether a goal is reachable.
+	def determineGoal(self):
+
+		# Case when we have the gold - set starting position to be goal
+		if (gs.TILE_GOLD in self.curr_items):
+			return (self.GOALTYPE_REACH, self.gameboard.start_position)
+			
+		# Prioritise other goals
+		else:
+			# Check whether the gold can be seen on the map
+			goldPos = self.findGold()
+			if not (self.equalPosition(goldPos, self.null_position)):
+				return = (self.GOALTYPE_GET_ITEM, goldPos)
+
+			else:
+				pass
 
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
