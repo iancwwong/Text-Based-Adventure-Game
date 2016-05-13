@@ -136,7 +136,30 @@ class DecisionMaker(object):
 	#	* getting more detail about area around a specific position
 	# NOTE: Should ALWAYS return a reachable position
 	def getExplorePosition(self, *targetPos):
-		pass
+
+		finalExplorePosition = {}
+
+		# Check whether there are any unknown spots (the ones with '?')
+		# If there is, find a blank space next to it
+
+		# If there isn't, find a blank space on the map edge
+
+		# Choose the position furthest away in a target direction
+		# maxDist = 0
+		# directions = [self.gameboard.DIRECTION_UP, self.gameboard.DIRECTION_RIGHT, \
+		# 			  self.gameboard.DIRECTION_DOWN, self.gameboard.DIRECTION_LEFT ]
+		# for direction in directions:
+		# 	dist = 0
+		# 	newPos = self.gameboard.curr_position
+		# 	while (self.gameboard.isValidPosition(self.gameboard.movePoint(newPos, direction))) \
+		# 			and (self.gameboard.getTile(self.gameboard.movePoint(newPos, direction)) == gs.TILE_BLANK):
+		# 		dist += 1
+		# 		newPos = self.gameboard.movePoint(newPos, direction)
+		# 	if maxDist < dist:
+		# 		maxDist = dist
+		# 		finalExplorePosition = newPos
+
+		return finalExplorePosition
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -264,6 +287,7 @@ class DecisionMaker(object):
 # SEARCH HELPER CLASSES
 # ----------------------------------
 # A simpler version of gameboard ie without starting position
+# whose sole purpose is for nodes (to simulate the gameboard without changing the actual gameboard)
 # Represents the map as a list of lists
 # Like Gameboard, a point is interpreted as:
 #	point = { "x": x, "y": y }

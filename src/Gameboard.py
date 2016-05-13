@@ -273,6 +273,13 @@ class Gameboard(object):
 	def numRows(self):
 		return len(self.gamemap)
 
+	# return whether a position is a valid position on the map
+	def isValidPosition(self, pos):
+		if (pos['y'] < self.numRows()) and (pos['y'] >= 0):
+			if (pos['x'] < self.numCols()) and (pos['x'] >= 0):
+				return True
+		return False
+
 	# [DEBUG] Print out a particular view
 	def showView(self, view):
 		viewStr = "+-----+\n"
