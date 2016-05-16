@@ -70,13 +70,11 @@ class DecisionMaker(object):
 		newActions = []
 
 		# Determine our goal
-		# NOTE: This may conduct multiple A* searches to determine whether or not it . However
-		# 		we decided to trade move efficiency for time efficiency
 		goal = self.determineGoal()
 
 		# Perform a search on the current gameboard to determine the list of actions
 		# to reach the gold
-		newActions = self.getReachGoalActions(goal, self.gameboard)		# What if no path is found, ie newActions is empty?
+		newActions = self.getReachGoalActions(goal, self.gameboard)
 
 		# DEBUGGING
 		sys.stdout.write("Goal: ")
@@ -136,7 +134,7 @@ class DecisionMaker(object):
 		while len(blankEdgeTiles) > 0:
 			explorePosition = blankEdgeTiles.pop()
 			goal = (self.GOALTYPE_EXPLORE, explorePosition)
-			if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
+			if self.isReachable(goal):
 			 	return explorePosition
 
 		# At this point, there are no blank tiles - we look for question marks with blank spaces
@@ -148,12 +146,18 @@ class DecisionMaker(object):
 			if not (blankCandidates == []):
 				for blankSquare in blankCandidates:
 					goal = (self.GOALTYPE_EXPLORE, blankSquare)
-					if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
+					if self.isReachable(goal):
 				 		return blankSquare
 
 		# No goal found - return start position as goal
 		if not finalExplorePosition:
-			return finalExplorePosition
+			return self.gameboard.start_position
+
+	# Determine whether a goal with a particular position is reachable
+	def isReachable(self, goal):
+		if len(getReachGoalActions(goal, self.gameboard)) > 0:
+			return True
+		return False
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
