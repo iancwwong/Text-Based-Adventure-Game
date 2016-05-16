@@ -144,17 +144,16 @@ class DecisionMaker(object):
 		questionTiles = self.gameboard.getUnknownTiles()
 		while len(questionTiles) > 0:
 			explorePosition = questionTiles.pop()
-			if (self.gameboard.hasAdjacent(explorePosition, gs.TILE_BLANK)):
-				goal = (self.GOALTYPE_EXPLORE, explorePosition)
-				if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
-				 	return explorePosition
+			blankCandidates = self.gameboard.getAdjacentSquares(explorePosition, gs.TILE_BLANK)
+			if not (blankCandidates == []):
+				for blankSquare in blankCandidates:
+					goal = (self.GOALTYPE_EXPLORE, blankSquare)
+					if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
+				 		return blankSquare
 
-		# Case when finalExplorePosition is instantiated with a goal
-		if finalExplorePosition:
+		# No goal found - return start position as goal
+		if not finalExplorePosition:
 			return finalExplorePosition
-		else:
-			# No goal found - return start position as goal
-			return self.gameboard.start_position
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS

@@ -292,7 +292,11 @@ class Gameboard(object):
 		return False
 
 	# Return all valid adjacent squares around a given position as a list
-	def getAdjacentSquares(self, pos):
+	# arg[0] = pos
+	# arg[1] = tile type
+	def getAdjacentSquares(self, *args):
+		pos = args[0]
+
 		# Construct a list of all 4 valid positions around a given position
 		possibleAdjSquares = []
 		squareUp = { 'x': pos['x'], 'y' : pos ['y'] - 1 }
@@ -304,7 +308,12 @@ class Gameboard(object):
 		possibleAdjSquares.append(squareDown)
 		possibleAdjSquares.append(squareLeft)
 
-		return [square for square in possibleAdjSquares if self.isValidPosition(square)]
+		if len(args) > 1:
+			return [square for square in possibleAdjSquares if ( \
+						self.isValidPosition(square) and (self.getTile(square) == args[1])
+					)]
+		else:
+			return [square for square in possibleAdjSquares if self.isValidPosition(square)]
 
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value

@@ -39,13 +39,15 @@ class MoveValidator(object):
 					if(gs.TILE_STEPPING_STONE not in curr_items):
 						return False
 				elif gamemap[y][x] == gs.TILE_DOOR:
-						return False
+					return False
 				elif gamemap[y][x] == gs.TILE_TREE:
-						return False
+					return False
 				elif gamemap[y][x] == gs.TILE_WALL:
-						return False
+					return False
 				elif gamemap[y][x] == gs.TILE_MAP_EDGE:
-						return False
+					return False
+				elif gamemap[y][x] == gs.TILE_UNKNOWN:
+					return False
 
 			elif(action == gs.ACTION_CHOP):
 				if gamemap[y][x] == gs.TILE_TREE:
