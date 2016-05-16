@@ -142,6 +142,7 @@ class DecisionMaker(object):
 		# At this point, there are no blank tiles - we look for question marks instead
 
 		return finalExplorePosition
+		
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
 	def findGold(self):
