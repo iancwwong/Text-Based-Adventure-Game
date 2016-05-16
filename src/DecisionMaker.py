@@ -111,7 +111,12 @@ class DecisionMaker(object):
 			# Check whether the gold can be seen on the map
 			goldPos = self.gameboard.getGoldPos()
 			if not (self.equalPosition(goldPos, self.gameboard.null_position)):
-				return (self.GOALTYPE_GET_ITEM, goldPos)
+				# Check for gold reachability
+				goal = (self.GOALTYPE_GET_ITEM, goldPos)
+				if self.isReachable(goal):
+					return (goal)
+				else:
+					return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
 
 			# Gold cannot be seen - explore
 			else:
@@ -131,8 +136,9 @@ class DecisionMaker(object):
 		# Choose a tile on the edge of a map that is blank
 		# Assign goal to one that is reachable from current position
 		blankEdgeTiles = self.gameboard.getBlankEdgeTiles()
+		print blankEdgeTiles
 		while len(blankEdgeTiles) > 0:
-			explorePosition = blankEdgeTiles.pop()
+			explorePosition = blankEdgeTiles.pop(0)
 			goal = (self.GOALTYPE_EXPLORE, explorePosition)
 			if self.isReachable(goal):
 			 	return explorePosition
@@ -141,7 +147,7 @@ class DecisionMaker(object):
 		# adjacent to them
 		questionTiles = self.gameboard.getUnknownTiles()
 		while len(questionTiles) > 0:
-			explorePosition = questionTiles.pop()
+			explorePosition = questionTiles.pop(0)
 			blankCandidates = self.gameboard.getAdjacentSquares(explorePosition, gs.TILE_BLANK)
 			if not (blankCandidates == []):
 				for blankSquare in blankCandidates:
@@ -155,7 +161,7 @@ class DecisionMaker(object):
 
 	# Determine whether a goal with a particular position is reachable
 	def isReachable(self, goal):
-		if len(getReachGoalActions(goal, self.gameboard)) > 0:
+		if len(self.getReachGoalActions(goal, self.gameboard)) > 0:
 			return True
 		return False
 
@@ -192,7 +198,7 @@ class DecisionMaker(object):
 		final_action_list = []
 		while not nodepq.empty():
 			node = nodepq.get()
-			node.show()
+			#node.show()
 
 			# Compare the agent's position AND direction in the case when highLevelGoal is of type 'ELIMINATE_OBSTACLE'
 			if self.equalPosition(node.vgameboard.curr_position, goalPos):
@@ -218,8 +224,8 @@ class DecisionMaker(object):
 				# Determine list of possible actions from the simulated situation
 				possible_actions = self.mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
 
-				print "Possible actions:"
-				print possible_actions
+				#print "Possible actions:"
+				#print possible_actions
 
 				# For each possible action, create a node and insert into priority queue
 				for action in possible_actions:

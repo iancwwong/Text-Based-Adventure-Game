@@ -83,6 +83,9 @@ class Agent(object):
 		while (self.conn_alive):
 			try:
 
+				# DEBUG
+				#user_action = raw_input('')
+
 				# Generate an action
 				action = self.decisionmaker.getAction()
 
