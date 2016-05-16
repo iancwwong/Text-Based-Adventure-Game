@@ -120,6 +120,28 @@ class DecisionMaker(object):
 				explorePosition = self.getExplorePosition()
 				return (self.GOALTYPE_EXPLORE, explorePosition)
 
+	# Return a 'most promising' position to reach on the map for the purpose
+	# of:
+	#	* expanding the map
+	#	* getting more detail about area around a specific position
+	# NOTE: Should ALWAYS return a reachable position
+	def getExplorePosition(self, *targetPos):
+
+		finalExplorePosition = {}
+		goal = ()
+
+		# Choose a tile on the edge of a map that is blank
+		# Assign goal to one that is reachable from current position
+		blankEdgeTiles = self.findBlankEdgeTiles()
+		while len(blankEdgeTiles) > 0:
+			finalExplorePosition = blankEdgeTiles.pop()
+			# goal = (self.GOALTYPE_EXPLORE, finalExplorePosition)
+			# if len(self.getReachGoalActions(goal, self.gameboard)) > 0:
+			# 	return finalExplorePosition
+
+		# At this point, there are no blank tiles - we look for question marks instead
+
+		return finalExplorePosition
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
 	def findGold(self):
@@ -130,36 +152,25 @@ class DecisionMaker(object):
 					return currpoint
 		return self.null_position
 
-	# Return a 'most promising' position to reach on the map for the purpose
-	# of:
-	#	* expanding the map
-	#	* getting more detail about area around a specific position
-	# NOTE: Should ALWAYS return a reachable position
-	def getExplorePosition(self, *targetPos):
+	# Find all the blank tiles on the edge of a map
+	def findBlankEdgeTiles(self):
+		blankEdgeTilePositions = []
 
-		finalExplorePosition = {}
+		# Check only edge tiles
+		for i in range(0, self.gameboard.numRows()):
+			if (i > 0 and i < self.gameboard.numRows() - 1):
+				for j in [0, self.gameboard.numCols() - 1]:
+					currPos = { 'x': j, 'y': i}
+					if (self.gameboard.getTile(currPos) == gs.TILE_BLANK):
+						blankEdgeTilePositions.append(currPos)					
+			else:
+				for j in range(0, self.gameboard.numCols()):
+					currPos = { 'x': j, 'y': i}
+					if (self.gameboard.getTile(currPos) == gs.TILE_BLANK):
+						blankEdgeTilePositions.append(currPos)
 
-		# Check whether there are any unknown spots (the ones with '?')
-		# If there is, find a blank space next to it
+		return blankEdgeTilePositions
 
-		# If there isn't, find a blank space on the map edge
-
-		# Choose the position furthest away in a target direction
-		# maxDist = 0
-		# directions = [self.gameboard.DIRECTION_UP, self.gameboard.DIRECTION_RIGHT, \
-		# 			  self.gameboard.DIRECTION_DOWN, self.gameboard.DIRECTION_LEFT ]
-		# for direction in directions:
-		# 	dist = 0
-		# 	newPos = self.gameboard.curr_position
-		# 	while (self.gameboard.isValidPosition(self.gameboard.movePoint(newPos, direction))) \
-		# 			and (self.gameboard.getTile(self.gameboard.movePoint(newPos, direction)) == gs.TILE_BLANK):
-		# 		dist += 1
-		# 		newPos = self.gameboard.movePoint(newPos, direction)
-		# 	if maxDist < dist:
-		# 		maxDist = dist
-		# 		finalExplorePosition = newPos
-
-		return finalExplorePosition
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -468,7 +479,8 @@ class SearchNode(object):
 
 	# Attributes
 	action = ''		# Action carried out to reach this node
-	eval_cost = 0		# Cost to reach this node
+	acc_cost = 0		# Accumulated cost to reach this node
+	eval_cost = 0		# Heuristic + accumulated cost
 	vgameboard = None	# Virtual gameboard
 	prevNode = None
 	
@@ -476,8 +488,8 @@ class SearchNode(object):
 	def __init__(self, vgameboard, action, prevNode):
 		self.action = action				# A single char (if '0', init action)
 		self.vgameboard = vgameboard			# Virtual gameboard
-		self.eval_cost = self.evaluateCost()		# Calculate the node cost based on gameboard
 		self.prevNode = prevNode
+		self.eval_cost = self.evaluateCost()		# Calculate the node cost based on gameboard
 
 	# For inserting into priority queue
 	def __cmp__(self, otherNode):
@@ -543,9 +555,13 @@ class SearchNode(object):
 		return finalHeuristicValue
 
 	# Cost to reach this node based on the cost of the action itself
-	# Currently the cost of an action is 1
+	# Accumulates on the previous node
 	def getReachCost(self):
-		return 1
+		if (self.prevNode == None):
+			self.acc_cost = 0
+			return 0
+		else:
+			return (self.prevNode.acc_cost + 1)
 
 	# Determine whether an object is facing in a 'general direction' to a goal position
 	# Returns 'True' or 'False'
