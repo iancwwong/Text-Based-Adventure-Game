@@ -111,8 +111,8 @@ class DecisionMaker(object):
 		# Prioritise other goals
 		else:
 			# Check whether the gold can be seen on the map
-			goldPos = self.findGold()
-			if not (self.equalPosition(goldPos, self.null_position)):
+			goldPos = self.gameboard.getGoldPos()
+			if not (self.equalPosition(goldPos, self.gameboard.null_position)):
 				return (self.GOALTYPE_GET_ITEM, goldPos)
 
 			# Gold cannot be seen - explore
@@ -132,46 +132,29 @@ class DecisionMaker(object):
 
 		# Choose a tile on the edge of a map that is blank
 		# Assign goal to one that is reachable from current position
-		blankEdgeTiles = self.findBlankEdgeTiles()
+		blankEdgeTiles = self.gameboard.getBlankEdgeTiles()
 		while len(blankEdgeTiles) > 0:
-			finalExplorePosition = blankEdgeTiles.pop()
-			# goal = (self.GOALTYPE_EXPLORE, finalExplorePosition)
-			# if len(self.getReachGoalActions(goal, self.gameboard)) > 0:
-			# 	return finalExplorePosition
+			explorePosition = blankEdgeTiles.pop()
+			goal = (self.GOALTYPE_EXPLORE, explorePosition)
+			if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
+			 	return explorePosition
 
-		# At this point, there are no blank tiles - we look for question marks instead
+		# At this point, there are no blank tiles - we look for question marks with blank spaces
+		# adjacent to them
+		questionTiles = self.gameboard.getUnknownTiles()
+		while len(questionTiles) > 0:
+			explorePosition = questionTiles.pop()
+			if (self.gameboard.hasAdjacent(explorePosition, gs.TILE_BLANK)):
+				goal = (self.GOALTYPE_EXPLORE, explorePosition)
+				if len(self.getReachGoalActions(goal, self.gameboard)) > 0:	# reachability
+				 	return explorePosition
 
-		return finalExplorePosition
-		
-	# Return the position of the gold on gamemap if found.
-	# else return the null_position value
-	def findGold(self):
-		for i in range(0, self.gameboard.numRows()):
-			for j in range(0, self.gameboard.numCols()):
-				currpoint = {"x" : j, "y" : i}
-				if(self.gameboard.getTile(currpoint) == gs.TILE_GOLD):
-					return currpoint
-		return self.null_position
-
-	# Find all the blank tiles on the edge of a map
-	def findBlankEdgeTiles(self):
-		blankEdgeTilePositions = []
-
-		# Check only edge tiles
-		for i in range(0, self.gameboard.numRows()):
-			if (i > 0 and i < self.gameboard.numRows() - 1):
-				for j in [0, self.gameboard.numCols() - 1]:
-					currPos = { 'x': j, 'y': i}
-					if (self.gameboard.getTile(currPos) == gs.TILE_BLANK):
-						blankEdgeTilePositions.append(currPos)					
-			else:
-				for j in range(0, self.gameboard.numCols()):
-					currPos = { 'x': j, 'y': i}
-					if (self.gameboard.getTile(currPos) == gs.TILE_BLANK):
-						blankEdgeTilePositions.append(currPos)
-
-		return blankEdgeTilePositions
-
+		# Case when finalExplorePosition is instantiated with a goal
+		if finalExplorePosition:
+			return finalExplorePosition
+		else:
+			# No goal found - return start position as goal
+			return self.gameboard.start_position
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -206,6 +189,7 @@ class DecisionMaker(object):
 		final_action_list = []
 		while not nodepq.empty():
 			node = nodepq.get()
+			node.show()
 
 			# Compare the agent's position AND direction in the case when highLevelGoal is of type 'ELIMINATE_OBSTACLE'
 			if self.equalPosition(node.vgameboard.curr_position, goalPos):
@@ -230,6 +214,9 @@ class DecisionMaker(object):
 	
 				# Determine list of possible actions from the simulated situation
 				possible_actions = self.mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+
+				print "Possible actions:"
+				print possible_actions
 
 				# For each possible action, create a node and insert into priority queue
 				for action in possible_actions:

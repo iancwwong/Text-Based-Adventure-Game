@@ -78,7 +78,7 @@ class Agent(object):
 
 		# Update the map
 		self.gameboard.updateMap(self.view, 'init')
-		self.gameboard.showMap()
+		#self.gameboard.showMap()
 
 		while (self.conn_alive):
 			try:
@@ -111,18 +111,18 @@ class Agent(object):
 					self.gameboard.updateMap(self.view, action)
 
 					# DEBUGGING
-					print "Current items:"
-					print self.items
+					#print "Current items:"
+					#print self.items
 
-					print "Actions taken:"
-					print self.decisionmaker.getAllPastActions()
+					#print "Actions taken:"
+					#print self.decisionmaker.getAllPastActions()
 
-					print "Map:"
-					self.gameboard.showMap()
+					#print "Map:"
+					#self.gameboard.showMap()
 
 				# Display the view
-				print "View:"
-				self.displayView()
+				#print "View:"
+				#self.displayView()
 
 			except socket.error:
 

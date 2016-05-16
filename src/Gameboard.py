@@ -12,11 +12,14 @@ import GameSymbols as gs
 class Gameboard(object):
 
 	# Constants
+
 	# Direction
 	DIRECTION_UP = 0
 	DIRECTION_RIGHT = 1
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
+
+	null_position = {'x': -1, 'y': -1}
 
 	# Attributes
 	gamemap = [] 		# global view of the map (explored so far)
@@ -279,6 +282,68 @@ class Gameboard(object):
 			if (pos['x'] < self.numCols()) and (pos['x'] >= 0):
 				return True
 		return False
+
+	# return whether the 4 adjacent squares to a given position contains
+	# a particular tile type
+	def hasAdjacent(self, pos, tileType):
+		for adjSquare in self.getAdjacentSquares(pos):
+			if self.getTile(adjSquare) == tileType:
+				return True
+		return False
+
+	# Return all valid adjacent squares around a given position as a list
+	def getAdjacentSquares(self, pos):
+		# Construct a list of all 4 valid positions around a given position
+		possibleAdjSquares = []
+		squareUp = { 'x': pos['x'], 'y' : pos ['y'] - 1 }
+		squareRight = { 'x': pos['x'] + 1, 'y' : pos ['y'] }
+		squareDown = { 'x': pos['x'], 'y' : pos ['y'] + 1 }
+		squareLeft = { 'x': pos['x'] - 1, 'y' : pos ['y'] }
+		possibleAdjSquares.append(squareUp)
+		possibleAdjSquares.append(squareRight)
+		possibleAdjSquares.append(squareDown)
+		possibleAdjSquares.append(squareLeft)
+
+		return [square for square in possibleAdjSquares if self.isValidPosition(square)]
+
+	# Return the position of the gold on gamemap if found.
+	# else return the null_position value
+	def getGoldPos(self):
+		for i in range(0, self.numRows()):
+			for j in range(0, self.numCols()):
+				currpoint = {"x" : j, "y" : i}
+				if(self.getTile(currpoint) == gs.TILE_GOLD):
+					return currpoint
+		return self.null_position
+
+	# Find all the blank tiles on the edge of a map
+	def getBlankEdgeTiles(self):
+		blankEdgeTilePositions = []
+
+		# Check only edge tiles
+		for i in range(0, self.numRows()):
+			if (i > 0 and i < self.numRows() - 1):
+				for j in [0, self.numCols() - 1]:
+					currPos = { 'x': j, 'y': i}
+					if (self.getTile(currPos) == gs.TILE_BLANK):
+						blankEdgeTilePositions.append(currPos)					
+			else:
+				for j in range(0, self.numCols()):
+					currPos = { 'x': j, 'y': i}
+					if (self.getTile(currPos) == gs.TILE_BLANK):
+						blankEdgeTilePositions.append(currPos)
+
+		return blankEdgeTilePositions
+
+	# Find all the question tiles on a map
+	def getUnknownTiles(self):
+		unknownTiles = []
+		for i in range(0, self.numRows()):
+			for j in range(0, self.numCols()):
+				currPos = { 'x': j, 'y': i}
+				if (self.getTile(currPos) == gs.TILE_UNKNOWN):
+					unknownTiles.append(currPos)
+		return unknownTiles
 
 	# [DEBUG] Print out a particular view
 	def showView(self, view):
