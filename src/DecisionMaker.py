@@ -12,7 +12,7 @@ from MoveValidator import MoveValidator
 from copy import deepcopy
 import sys
 import GameSymbols as gs
-from Gameboard import Gameboard
+import random				# Final line of decision making
 
 class DecisionMaker(object):
 	# Constants
@@ -72,8 +72,9 @@ class DecisionMaker(object):
 		# Determine our goal
 		goal = self.determineGoal()
 
+		print "Current goal: %s" % str(goal)
+
 		# Perform a search on the current gameboard to determine the list of actions
-		# to reach the gold
 		newActions = self.getReachGoalActions(goal, self.gameboard)
 
 		# DEBUGGING
@@ -108,13 +109,15 @@ class DecisionMaker(object):
 			
 		# Prioritise other goals
 		else:
+
 			# Check whether the gold can be seen on the map
 			goldPos = self.gameboard.getGoldPos()
 			if not (self.equalPosition(goldPos, self.gameboard.null_position)):
+				print "Gold is foun"
+
 				# Check for gold reachability
-				goal = (self.GOALTYPE_GET_ITEM, goldPos)
-				if self.isReachable(goal):
-					return (goal)
+				if self.isReachable(goldPos):
+					return (self.GOALTYPE_GET_ITEM, goldPos)
 				else:
 					return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
 
@@ -131,28 +134,67 @@ class DecisionMaker(object):
 	def getExplorePosition(self, *targetPos):
 
 		finalExplorePosition = {}
-		goal = ()
 
 		# Get list of reachable positions from current position
-		candidatePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
+		reachablePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
 
 		# DEBUGGING
 		print "Reachable points from current position:"
-		print candidatePoints
+		print reachablePoints
 		self.gameboard.showMap()
 
 		# Choose a most promising candidate point, and set that to be the goal
-		exit()
+		if len(reachablePoints) > 0:
+			
+			# Filter a list of reachable points of which there are adjacent unknown tiles
+			candidatePointsUnknownAdj = self.getPointsAdj(reachablePoints, gs.TILE_UNKNOWN)
+			if len(candidatePointsUnknownAdj) > 0:
+				return candidatePointsUnknownAdj[random.randint(0,len(candidatePointsUnknownAdj)-1)]
 
-		# No goal found - return start position as goal
-		if not finalExplorePosition:
+			# Case when there are rno eachable tiles that are adjacent to unknown tiles
+			# Find a tile within the reachable points that is located on the edge of the map
+			candidatePointsEdgeLoc = self.getPointsLoc(reachablePoints, self.gameboard.LOCATION_EDGE)
+			if len(candidatePointsEdgeLoc) > 0:
+				return candidatePointsEdgeLoc[random.randint(0,len(candidatePointsEdgeLoc)-1)]
+
+			# Case when none of the options above are available:
+			# Pick a random position
+			finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
+			while self.equalPosition(finalExplorePosition, self.gameboard.curr_position):
+				finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
+			return finalExplorePosition
+
+		# Return final explore position (setting it to the start position if none are found)
+		if finalExplorePosition:
+			return finalExplorePosition
+		else:
 			return self.gameboard.start_position
 
-	# Determine whether a goal with a particular position is reachable
-	def isReachable(self, goal):
-		if len(self.getReachGoalActions(goal, self.gameboard)) > 0:
+	# Determine whether a position is reachable with current map
+	# using the flood fill algorithm
+	def isReachable(self, pos):
+		reachablePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
+		if self.pointExists(pos, reachablePoints):
 			return True
 		return False
+
+	# Given a list of positions on the map, determine which are the ones adjacent to
+	# a specific tile
+	def getPointsAdj(self, posList, tile):
+		pointsAdj = []			# Holds the final return positions
+		for pos in posList:
+			if self.gameboard.hasAdjacent(pos, tile):
+				pointsAdj.append(pos)
+		return pointsAdj
+
+	# Given a list of positions on the map, determine which are the ones located 
+	# in a particular location on the map (type specified in gameboard)
+	def getPointsLoc(self, posList, loc):
+		pointsLoc = []			# Holds the final return positions
+		for pos in posList:
+			if self.gameboard.located(pos, loc):
+				pointsLoc.append(pos)
+		return pointsLoc
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -235,7 +277,7 @@ class DecisionMaker(object):
 
 	# Perform flood fill algorithm over the map to determine a list of reachable points
 	# from a given start position.
-	# The 'target colour' is the blank tile.
+	# The 'target colour' is curently the blank tile.
 	def getReachablePoints(self, startPos, gameboard):
 
 		# Final return list
@@ -245,7 +287,7 @@ class DecisionMaker(object):
 		pointsToProcess = []
 		directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.DIRECTION_DOWN, gameboard.DIRECTION_LEFT ]
 
-		# Begin flood fill
+		# Begin flood fill algorithm
 		pointsToProcess.append(startPos)
 		while len(pointsToProcess) > 0:
 			processPoint = pointsToProcess.pop(0)
@@ -254,8 +296,8 @@ class DecisionMaker(object):
 			if (gameboard.isValidPosition(processPoint)):
 
 				if (gameboard.getTile(processPoint) in gs.player_icons) or \
-				   (gameboard.getTile(processPoint) == gs.TILE_BLANK):
-
+				   (self.isTargetColour(processPoint, gameboard)):
+				   
 					reachablePoints.append(processPoint)
 
 					# Construct the list of points that are from the four directions of process point
@@ -269,12 +311,27 @@ class DecisionMaker(object):
 						(not self.pointExists(movedPoint, pointsToProcess)):
 							pointsToProcess.append(movedPoint)
 
-		# Return the final list of points
-		print "Final list of reachable points:"
-		print reachablePoints
-		gameboard.showMap()
-
 		return reachablePoints
+
+	# Determine whether a position is of 'target colour' ie reachable
+	def isTargetColour(self, pos, gameboard):
+		tile = gameboard.getTile(pos)
+		if (tile == gs.TILE_BLANK):
+			return True
+		elif (tile in gs.item_list):
+			return True
+		elif (tile == gs.TILE_TREE):
+			# Check for axe in possession
+			if (gs.TILE_AXE in self.curr_items):
+				return True
+		elif (tile == gs.TILE_DOOR):
+			# Check for key in possession
+			if (gs.TILE_KEY in self.curr_items):
+				return True
+
+		# All other cases:
+		else:
+			return False
 
 	# Compare two position points for equivalence
 	# Both positions are given as points, in the format:

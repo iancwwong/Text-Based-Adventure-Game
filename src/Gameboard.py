@@ -19,6 +19,9 @@ class Gameboard(object):
 	DIRECTION_DOWN = 2
 	DIRECTION_LEFT = 3
 
+	# Map Location Types
+	LOCATION_EDGE = 0
+
 	null_position = {'x': -1, 'y': -1}
 
 	# Attributes
@@ -291,6 +294,31 @@ class Gameboard(object):
 				return True
 		return False
 
+	# return whether a given position is located in a particular region
+	# Pos given as format:
+	# 	pos = { 'x': x, 'y': y }
+	def located(self, pos, locType):
+		# Obtain the list of all positions with the given locType
+		locPosList = []
+
+		# Case of map edge: first and last columns, first and last rows
+		if locType == self.LOCATION_EDGE:
+			for i in range(0, self.numRows()):
+				if (i > 0 and i < self.numRows() - 1):
+					for j in [0, self.numCols() - 1]:
+						currPos = { 'x': j, 'y': i}
+						locPosList.append(currPos)				
+				else:
+					for j in range(0, self.numCols()):
+						currPos = { 'x': j, 'y': i}
+						locPosList.append(currPos)
+
+		# Check whether the given pos is in the region
+		for locPos in locPosList:
+			if self.equalPosition(locPos, pos):
+				return True
+		return False
+
 	# Return all valid adjacent squares around a given position as a list
 	# arg[0] = pos
 	# arg[1] = tile type
@@ -364,3 +392,13 @@ class Gameboard(object):
 			viewStr += "|\n"
 		viewStr += "+-----+"
 		print viewStr
+
+	# ---------------------------
+	# HELPER FUNCTIONS
+	# ---------------------------
+
+	# Compare two position points for equivalence
+	# Both positions are given as points, in the format:
+	# 	pos = { 'x': X, 'y': Y }
+	def equalPosition(self, pos1, pos2):
+		return ( (pos1['x'] == pos2['x']) and (pos1['y'] == pos2['y']) )
