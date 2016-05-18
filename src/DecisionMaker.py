@@ -134,7 +134,7 @@ class DecisionMaker(object):
 		goal = ()
 
 		# Get list of reachable positions from current position
-		candidatePoints = getReachablePoints(self.gameboard.curr_position, self.gameboard)
+		candidatePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
 
 		# DEBUGGING
 		print "Reachable points from current position:"
@@ -234,11 +234,47 @@ class DecisionMaker(object):
 		return []
 
 	# Perform flood fill algorithm over the map to determine a list of reachable points
-	# from the agent's current position
-	def getReachablePoints(self, position, gameboard):
+	# from a given start position.
+	# The 'target colour' is the blank tile.
+	def getReachablePoints(self, startPos, gameboard):
 
-		# Create a virtual gameboard of the initial gameboard state
-		vgameboard = VirtualGameboard(gameboard, self.curr_items, goalPos)
+		# Final return list
+		reachablePoints = []	# Position given is assumed to be reachable
+
+		# For searching
+		pointsToProcess = []
+		directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.DIRECTION_DOWN, gameboard.DIRECTION_LEFT ]
+
+		# Begin flood fill
+		pointsToProcess.append(startPos)
+		while len(pointsToProcess) > 0:
+			processPoint = pointsToProcess.pop(0)
+
+			# Check that point being considered is valid
+			if (gameboard.isValidPosition(processPoint)):
+
+				if (gameboard.getTile(processPoint) in gs.player_icons) or \
+				   (gameboard.getTile(processPoint) == gs.TILE_BLANK):
+
+					reachablePoints.append(processPoint)
+
+					# Construct the list of points that are from the four directions of process point
+					movedPoints = [ gameboard.movePoint(processPoint, direction) for direction in directionList ]
+
+					# Consider each of the moved points with regard to the 'target colour'
+					for movedPoint in movedPoints:
+
+						# Add iff not: already processed, or to be processed
+						if (not self.pointExists(movedPoint, reachablePoints)) and \
+						(not self.pointExists(movedPoint, pointsToProcess)):
+							pointsToProcess.append(movedPoint)
+
+		# Return the final list of points
+		print "Final list of reachable points:"
+		print reachablePoints
+		gameboard.showMap()
+
+		return reachablePoints
 
 	# Compare two position points for equivalence
 	# Both positions are given as points, in the format:
@@ -250,6 +286,15 @@ class DecisionMaker(object):
 	def exists(self, searchNode, nodeList):
 		for node in nodeList:
 			if self.equalVGameboards(node.vgameboard, searchNode.vgameboard):
+				return True
+		return False
+
+	# Check whether a position exists in a list of positions
+	# where position is of the format:
+	#		pos = { 'x': X, 'y': Y }
+	def pointExists(self, givenPos, posList):
+		for pos in posList:
+			if self.equalPosition(pos, givenPos):
 				return True
 		return False
 

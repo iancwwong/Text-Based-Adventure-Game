@@ -266,7 +266,7 @@ class Gameboard(object):
 		try:
 			return self.gamemap[point['y']][point['x']]
 		except IndexError:
-			print "Error: " + point + " is invalid for current map."
+			print "Error: " + str(point) + " is invalid for current map."
 
 	# returns the number of column in the gameboard
 	def numCols(self):

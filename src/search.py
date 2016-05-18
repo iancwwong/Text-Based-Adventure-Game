@@ -284,6 +284,18 @@ def exists(searchNode, nodeList):
 			return True
 	return False
 
+# Check whether a position exists in a list of positions
+# where position is of the format:
+#		pos = { 'x': X, 'y': Y }
+def pointExists(givenPos, posList):
+
+	for pos in posList:
+		if equalPosition(pos, givenPos):
+			return True
+	print "Position %s not found in list with elements:'"% str(givenPos)
+	print posList
+	return False
+
 # Check for equivalence between virtual gameboards
 def equalVGameboards(vgameboard1, vgameboard2):
 
@@ -326,8 +338,8 @@ gameboard.gamemap = []
 map_row0 = ['.', '.', '.', '.', '.', '.', '.']
 map_row1 = ['.', ' ', ' ', 'g', ' ', ' ', '.']
 map_row2 = ['.', ' ', '*', ' ', ' ', ' ', '.']
-map_row3 = ['.', ' ', '*', '*', '*', 'T', '.']
-map_row4 = ['.', ' ', '~', '<', 'a', 'o', '.']
+map_row3 = ['.', ' ', '*', '*', '*', ' ', '.']
+map_row4 = ['.', ' ', '~', '<', ' ', ' ', '.']
 map_row5 = ['.', '.', '.', '.', '.', '.', '.']
 gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
@@ -352,67 +364,100 @@ curr_items = []
 # BEGIN SEARCH FOR LIST OF ACTIONS
 # --------------------------------
 
-# Prepare priority queue
-nodepq = PriorityQueue()
+# # Prepare priority queue
+# nodepq = PriorityQueue()
 
-# Prepare a move validator
-mv = MoveValidator()
+# # Prepare a move validator
+# mv = MoveValidator()
 
-# Create a virtual gameboard of the initial gameboard state
-vgameboard = VirtualGameboard(gameboard, curr_items, goal)
+# # Create a virtual gameboard of the initial gameboard state
+# vgameboard = VirtualGameboard(gameboard, curr_items, goal)
 
-# Append initial node to queue
-node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
-nodepq.put(node)
+# # Append initial node to queue
+# node = SearchNode(vgameboard, 0, None)	# 0 = no previous action; None = No previous node
+# nodepq.put(node)
 
-print "Initial Position:"
-node.show()
-print ""
+# print "Initial Position:"
+# node.show()
+# print ""
 
-# Keep track of the nodes in a list, where index = node id
-node_list = []
-node_list.append(node)
+# # Keep track of the nodes in a list, where index = node id
+# node_list = []
+# node_list.append(node)
 
-# Begin A* Search
-final_action_list = []
-while not nodepq.empty():
-	node = nodepq.get()
+# # Begin A* Search
+# final_action_list = []
+# while not nodepq.empty():
+# 	node = nodepq.get()
 
-	if equalPosition(node.vgameboard.curr_position, goal):
+# 	if equalPosition(node.vgameboard.curr_position, goal):
 
-		# Show final position
-		print "Final position:"
-		node.show()
+# 		# Show final position
+# 		print "Final position:"
+# 		node.show()
 
-		# Backtrack list of nodes to get final list of actions
-		while not node.prevNode == None:
-			final_action_list.append(node.action)
-			node = node.prevNode
+# 		# Backtrack list of nodes to get final list of actions
+# 		while not node.prevNode == None:
+# 			final_action_list.append(node.action)
+# 			node = node.prevNode
 
-		final_action_list.reverse()
-		print "Final list of actions are:"
-		print final_action_list
-		#return final_action_list
-		exit()
-	else:
+# 		final_action_list.reverse()
+# 		print "Final list of actions are:"
+# 		print final_action_list
+# 		#return final_action_list
+# 		exit()
+# 	else:
 
-		# Determine list of possible actions from the simulated situation
-		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
-		#possible_actions = ['f', 'l', 'r']
+# 		# Determine list of possible actions from the simulated situation
+# 		possible_actions = mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+# 		#possible_actions = ['f', 'l', 'r']
 
-		node.show()
-		# For each possible action, create a node and insert into priority queue
-		for action in possible_actions:
-			tempvgameboard = deepcopy(node.vgameboard)
-			tempvgameboard.simulate(action)
-			newNode = SearchNode(tempvgameboard, action, node)
+# 		node.show()
+# 		# For each possible action, create a node and insert into priority queue
+# 		for action in possible_actions:
+# 			tempvgameboard = deepcopy(node.vgameboard)
+# 			tempvgameboard.simulate(action)
+# 			newNode = SearchNode(tempvgameboard, action, node)
 
-			# Put iff newNode doesn't currently exist in list of nodes
-			if exists(newNode, node_list):
-				""" Ignore """
-			else:
-				nodepq.put(newNode, newNode.eval_cost)
-				node_list.append(newNode)
+# 			# Put iff newNode doesn't currently exist in list of nodes
+# 			if exists(newNode, node_list):
+# 				""" Ignore """
+# 			else:
+# 				nodepq.put(newNode, newNode.eval_cost)
+# 				node_list.append(newNode)
 
-print "Darn, no path was found."
-#return []
+# print "Darn, no path was found."
+# #return []
+
+# Flood Fill Algorithm
+startPos = gameboard.curr_position
+
+# Final return list
+reachablePoints = []	# Position given is assumed to be reachable
+
+# For searching
+pointsToProcess = []
+directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.DIRECTION_DOWN, gameboard.DIRECTION_LEFT ]
+
+# Begin flood fill
+pointsToProcess.append(startPos)
+while len(pointsToProcess) > 0:
+	processPoint = pointsToProcess.pop(0)
+
+	if (gameboard.getTile(processPoint) in gs.player_icons) or \
+	(gameboard.isValidPosition(processPoint) and (gameboard.getTile(processPoint) == gs.TILE_BLANK)):
+
+		reachablePoints.append(processPoint)
+
+		# Construct the list of points that are from the four directions of process point
+		movedPoints = [ gameboard.movePoint(processPoint, direction) for direction in directionList ]
+
+		# Consider each of the moved points with regard to the 'target colour'
+		for movedPoint in movedPoints:
+			if not pointExists(movedPoint, reachablePoints):
+				pointsToProcess.append(movedPoint)
+
+# Return the final list of points
+print "Final list of reachable points:"
+print reachablePoints
+gameboard.showMap()
