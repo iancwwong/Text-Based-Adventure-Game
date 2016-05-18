@@ -133,27 +133,16 @@ class DecisionMaker(object):
 		finalExplorePosition = {}
 		goal = ()
 
-		# Choose a tile on the edge of a map that is blank
-		# Assign goal to one that is reachable from current position
-		blankEdgeTiles = self.gameboard.getBlankEdgeTiles()
-		print blankEdgeTiles
-		while len(blankEdgeTiles) > 0:
-			explorePosition = blankEdgeTiles.pop(0)
-			goal = (self.GOALTYPE_EXPLORE, explorePosition)
-			if self.isReachable(goal):
-			 	return explorePosition
+		# Get list of reachable positions from current position
+		candidatePoints = getReachablePoints(self.gameboard.curr_position, self.gameboard)
 
-		# At this point, there are no blank tiles - we look for question marks with blank spaces
-		# adjacent to them
-		questionTiles = self.gameboard.getUnknownTiles()
-		while len(questionTiles) > 0:
-			explorePosition = questionTiles.pop(0)
-			blankCandidates = self.gameboard.getAdjacentSquares(explorePosition, gs.TILE_BLANK)
-			if not (blankCandidates == []):
-				for blankSquare in blankCandidates:
-					goal = (self.GOALTYPE_EXPLORE, blankSquare)
-					if self.isReachable(goal):
-				 		return blankSquare
+		# DEBUGGING
+		print "Reachable points from current position:"
+		print candidatePoints
+		self.gameboard.showMap()
+
+		# Choose a most promising candidate point, and set that to be the goal
+		exit()
 
 		# No goal found - return start position as goal
 		if not finalExplorePosition:
@@ -243,6 +232,13 @@ class DecisionMaker(object):
 		# DEBUGGING
 		print "Darn, no path was found."
 		return []
+
+	# Perform flood fill algorithm over the map to determine a list of reachable points
+	# from the agent's current position
+	def getReachablePoints(self, position, gameboard):
+
+		# Create a virtual gameboard of the initial gameboard state
+		vgameboard = VirtualGameboard(gameboard, self.curr_items, goalPos)
 
 	# Compare two position points for equivalence
 	# Both positions are given as points, in the format:
