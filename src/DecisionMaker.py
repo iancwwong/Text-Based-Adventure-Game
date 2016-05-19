@@ -316,7 +316,7 @@ class DecisionMaker(object):
 	# Determine whether a position is of 'target colour' ie reachable
 	def isTargetColour(self, pos, gameboard):
 		tile = gameboard.getTile(pos)
-		if (tile == gs.TILE_BLANK):
+		if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
 			return True
 		elif (tile in gs.item_list):
 			return True
