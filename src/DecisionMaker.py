@@ -117,7 +117,7 @@ class DecisionMaker(object):
 				print "Gold is foun"
 
 				# Check for gold reachability
-				if self.isReachable(goldPos):
+				if self.isReachable(goldPos, self.gameboard.curr_position):
 					return (self.GOALTYPE_GET_ITEM, goldPos)
 				else:
 					return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
@@ -180,10 +180,10 @@ class DecisionMaker(object):
 		else:
 			return self.gameboard.start_position
 
-	# Determine whether a position is reachable with current map
+	# Determine whether a position is reachable from a current position in the current map
 	# using the flood fill algorithm
-	def isReachable(self, pos):
-		reachablePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
+	def isReachable(self, pos, currPos):
+		reachablePoints = self.getReachablePoints(currPos, self.gameboard)
 		if self.pointExists(pos, reachablePoints):
 			return True
 		return False
