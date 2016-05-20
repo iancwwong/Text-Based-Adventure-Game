@@ -158,8 +158,17 @@ class DecisionMaker(object):
 			if len(candidatePointsEdgeLoc) > 0:
 				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsEdgeLoc)
 
-			# Case when none of the options above are available:
-			# Pick a random position
+			# At this point, there are no tiles with adj unknown tiles, and blank squares on edge of map.
+			# Choose a random boundary-reachable point
+			# Note: There should ALWAYS be one
+			candidatePointsBoundary = self.getPointsBoundary(reachablePoints)
+			if len(candidatePointsBoundary) > 0:
+				finalExplorePosition = candidatePointsBoundary[random.randint(0,len(candidatePointsBoundary)-1)]
+				while self.equalPosition(finalExplorePosition, self.gameboard.curr_position):
+					finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
+				return finalExplorePosition
+
+			# For some reason, ended up here where above cases are not possible: Pick a random position
 			finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
 			while self.equalPosition(finalExplorePosition, self.gameboard.curr_position):
 				finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
@@ -197,7 +206,30 @@ class DecisionMaker(object):
 				pointsLoc.append(pos)
 		return pointsLoc
 
+	# Given a list of reachable positions, return the ones that are deemed 'boundary-reachable' 
+	# (ie a point that is on the boundary of the area that is reachable).
+	# More specifically, defined as:
+	#		* a square with less than 4 adjacent tiles
+	# or 	* adjacent tiles have a wall, water, or map edge tile
+	# or	* adjacent tiles have a tree while axe not in possession
+	# or	* adjacent tiles have a door while key not in possession
+	def getPointsBoundary(self, posList):
+		pointsBoundary = []
+		for pos in posList:
+			adjacentTilePos = self.gameboard.getAdjacentSquares(pos)
+			adjacentTileTypes = [ self.gameboard.getTile(adjPos) for adjPos in adjacentTilePos ]
+			if (len(adjacentTilePos) < 4) or \
+				(gs.TILE_WALL in adjacentTileTypes) or \
+				(gs.TILE_MAP_EDGE in adjacentTileTypes) or \
+				(gs.TILE_WATER in adjacentTileTypes) or \
+				( (gs.TILE_TREE in adjacentTileTypes) and (gs.TILE_AXE not in self.curr_items) ) or \
+				( (gs.TILE_DOOR in adjacentTileTypes) and (gs.TILE_KEY not in self.curr_items) ):
+				
+				pointsBoundary.append(pos)
+		return pointsBoundary
+
 	# Return the position that's shortest in distance to the given position
+	# NOTE: Returns a position OTHER than the given position
 	def getClosestPosition(self, givenPos, posList):
 
 		# Prepare the variables
@@ -208,6 +240,8 @@ class DecisionMaker(object):
 		
 		# loop through each position in list to determine minimum
 		for pos in posList:
+			if (self.equalPosition(givenPos, pos)):
+				continue
 			x2 = pos['x']
 			y2 = pos['y']
 			dist = math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
