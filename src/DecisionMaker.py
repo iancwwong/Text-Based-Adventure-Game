@@ -12,6 +12,7 @@ from MoveValidator import MoveValidator
 from copy import deepcopy
 import sys
 import GameSymbols as gs
+import math
 import random				# Final line of decision making
 
 class DecisionMaker(object):
@@ -149,13 +150,13 @@ class DecisionMaker(object):
 			# Filter a list of reachable points of which there are adjacent unknown tiles
 			candidatePointsUnknownAdj = self.getPointsAdj(reachablePoints, gs.TILE_UNKNOWN)
 			if len(candidatePointsUnknownAdj) > 0:
-				return candidatePointsUnknownAdj[random.randint(0,len(candidatePointsUnknownAdj)-1)]
+				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsUnknownAdj)
 
-			# Case when there are rno eachable tiles that are adjacent to unknown tiles
+			# Case when there are no reachable tiles that are adjacent to unknown tiles
 			# Find a tile within the reachable points that is located on the edge of the map
 			candidatePointsEdgeLoc = self.getPointsLoc(reachablePoints, self.gameboard.LOCATION_EDGE)
 			if len(candidatePointsEdgeLoc) > 0:
-				return candidatePointsEdgeLoc[random.randint(0,len(candidatePointsEdgeLoc)-1)]
+				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsEdgeLoc)
 
 			# Case when none of the options above are available:
 			# Pick a random position
@@ -195,6 +196,26 @@ class DecisionMaker(object):
 			if self.gameboard.located(pos, loc):
 				pointsLoc.append(pos)
 		return pointsLoc
+
+	# Return the position that's shortest in distance to the given position
+	def getClosestPosition(self, givenPos, posList):
+
+		# Prepare the variables
+		minDist = -1
+		closestPos = { 'x': -1, 'y': -1 }
+		x1 = givenPos['x']
+		y1 = givenPos['y']
+		
+		# loop through each position in list to determine minimum
+		for pos in posList:
+			x2 = pos['x']
+			y2 = pos['y']
+			dist = math.sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1))
+			if (minDist == -1) or (minDist > dist):
+				minDist = dist
+				closestPos = pos
+		return closestPos	
+	
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
