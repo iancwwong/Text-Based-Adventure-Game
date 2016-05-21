@@ -345,11 +345,11 @@ class Gameboard(object):
 
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
-	def getGoldPos(self):
+	def getItemPosition(self, itemToGet):
 		for i in range(0, self.numRows()):
 			for j in range(0, self.numCols()):
 				currpoint = {"x" : j, "y" : i}
-				if(self.getTile(currpoint) == gs.TILE_GOLD):
+				if(self.getTile(currpoint) == itemToGet):
 					return currpoint
 		return self.null_position
 
