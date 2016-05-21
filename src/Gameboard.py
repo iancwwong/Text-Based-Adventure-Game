@@ -346,12 +346,13 @@ class Gameboard(object):
 	# Return the position of the gold on gamemap if found.
 	# else return the null_position value
 	def getItemPosition(self, itemToGet):
+		itemPosList = []
 		for i in range(0, self.numRows()):
 			for j in range(0, self.numCols()):
 				currpoint = {"x" : j, "y" : i}
 				if(self.getTile(currpoint) == itemToGet):
-					return currpoint
-		return self.null_position
+					itemPosList.append(currpoint)
+		return itemPosList
 
 	# Find all the blank tiles on the edge of a map
 	def getBlankEdgeTiles(self):
