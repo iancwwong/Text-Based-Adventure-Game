@@ -21,8 +21,7 @@ class Gameboard(object):
 
 	# Map Location Types
 	LOCATION_EDGE = 0
-
-	null_position = {'x': -1, 'y': -1}
+	LOCATION_RADIUS = 1
 
 	# Attributes
 	gamemap = [] 		# global view of the map (explored so far)
@@ -286,6 +285,18 @@ class Gameboard(object):
 				return True
 		return False
 
+	# return whether a row value is valid on the map
+	def isValidRow(self, rowNum):
+		if (rowNum > 0 and rowNum < self.numRows()):
+			return True
+		return False
+
+	# return whether a column value is valid on the map
+	def isValidColumn(self, colNum):
+		if (colNum > 0 and colNum < self.numCols()):
+			return True
+		return False
+
 	# return whether the 4 adjacent squares to a given position contains
 	# a particular tile type
 	def hasAdjacent(self, pos, tileType):
@@ -297,11 +308,27 @@ class Gameboard(object):
 	# return whether a given position is located in a particular region
 	# Pos given as format:
 	# 	pos = { 'x': x, 'y': y }
-	def located(self, pos, locType):
-		# Obtain the list of all positions with the given locType
+	# args[0] = pos
+	# args[1] = location type
+	# args[2] = radius measurement
+	def located(self, pos, locationDetails):
+		# Check whether the given pos is in the squares in the particular location
+		for locPos in self.getLocationPositions(locationDetails):
+			if self.equalPosition(locPos, pos):
+				return True
+		return False
+
+	# Returns a list of positions that correspond to what is described in locationDetails,
+	# given as a tuple in the format:
+	#	locationDetails = (<location type>, <extra args>)
+	def getLocationPositions(self, locationDetails):
+		# Final return list
 		locPosList = []
 
-		# Case of map edge: first and last columns, first and last rows
+		# Parse locationDetails
+		locType = locationDetails[0]
+
+		# Case when map edge positions requested
 		if locType == self.LOCATION_EDGE:
 			for i in range(0, self.numRows()):
 				if (i > 0 and i < self.numRows() - 1):
@@ -313,11 +340,24 @@ class Gameboard(object):
 						currPos = { 'x': j, 'y': i}
 						locPosList.append(currPos)
 
-		# Check whether the given pos is in the region
-		for locPos in locPosList:
-			if self.equalPosition(locPos, pos):
-				return True
-		return False
+		# Case when positions around a particular position with a given radius is requested
+		# Pos given as a dict, radius as an int
+		elif locType == self.LOCATION_RADIUS:
+				locType, pos, radius = locationDetails
+
+				# Get the corner points of the area that corresponds to the squares in a given radius
+				# around the particular position
+				topLeftPos = { 'x': pos['x'] - radius,  'y': pos['y'] - radius }
+				bottomRightPos = { 'x': pos['x'] + radius,  'y': pos['y'] + radius }
+				for row in range(topLeftPos['y'], bottomRightPos['y']+1):	# range - exclusive of last end point
+					if self.isValidRow(row):
+						for col in range(topLeftPos['x'], bottomRightPos['x']+1):
+							if self.isValidColumn(col):
+								currPos = {'x': col, 'y': row}
+								locPosList.append(currPos)
+
+		# Return result
+		return locPosList
 
 	# Return all valid adjacent squares around a given position as a list
 	# arg[0] = pos
