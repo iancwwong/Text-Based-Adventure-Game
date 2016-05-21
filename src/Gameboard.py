@@ -343,8 +343,8 @@ class Gameboard(object):
 		else:
 			return [square for square in possibleAdjSquares if self.isValidPosition(square)]
 
-	# Return the position of the gold on gamemap if found.
-	# else return the null_position value
+	# Given a specific item to look for, find all the positions where the item is located
+	# returned as a list
 	def getItemPosition(self, itemToGet):
 		itemPosList = []
 		for i in range(0, self.numRows()):
