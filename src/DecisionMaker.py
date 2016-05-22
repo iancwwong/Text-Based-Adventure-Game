@@ -9,6 +9,7 @@
 
 from Queue import PriorityQueue
 from MoveValidator import MoveValidator
+from FloodFillNode import FloodFillNode
 from copy import deepcopy
 import sys
 import GameSymbols as gs
@@ -29,7 +30,7 @@ class DecisionMaker(object):
 	past_actions = []		# a list of past actions (consisting of single chars)
 	todo_actions = []		# a list of actions to perform
 	curr_items = []			# a list of items we currently possess
-	target_items = []		# a list of items to get in order to obtain the gold
+	target_items = []		# a list of items to get in order to obtain the gold. Maintains a stack-like behaviour (first item is most important)
 	curr_goal = ()			# a tuple that contains the current goal
 	gameboard = None 		# gameboard containing current environment state
 	mv = None 				# Move validator
@@ -40,9 +41,8 @@ class DecisionMaker(object):
 		self.gameboard = gameboard
 		self.todo_actions = []
 		self.curr_items = []
-		self.target_items = []
+		self.target_items = [gs.TILE_GOLD]	# By default, gold is our first target item
 		self.curr_goal = ()
-		self.target_items = []
 		self.mv = MoveValidator()
 
 	# Appends a given action (assumed to be a single char)
@@ -95,6 +95,14 @@ class DecisionMaker(object):
 
 	# update the current list of items we have in the list
 	def updateCurrItems(self, items):
+		# Check for any items gained
+		itemsGained = set(items) - set(self.curr_items)
+
+		# Check if the gained items are in target_items
+		for item in itemsGained:
+			if item in self.target_items:
+				self.target_items.remove(item)
+
 		self.curr_items = items
 
 	# Determine a goal based on decision making flowchart
@@ -111,33 +119,71 @@ class DecisionMaker(object):
 		# Prioritise other goals
 		else:
 
-			# Check whether the gold can be seen on the map
-			goldPos = self.gameboard.getGoldPos()
-			if not (self.equalPosition(goldPos, self.gameboard.null_position)):
-				print "Gold is foun"
+			# Check whether there is a target item
+			# NOTE: There should ALWAYS be one, assuming the gold has not yet been obtained
+			if len(self.target_items) > 0:
 
-				# Check for gold reachability
-				if self.isReachable(goldPos, self.gameboard.curr_position):
-					return (self.GOALTYPE_GET_ITEM, goldPos)
+				# Quick check for gold reachability - in the case that a new path has been found due to exploring
+				if len(self.gameboard.getItemPositions(gs.TILE_GOLD)) > 0:
+					goldPos = self.gameboard.getItemPositions(gs.TILE_GOLD)[0]
+					if self.isReachable(goldPos, self.gameboard.curr_position, True):
+						return (self.GOALTYPE_GET_ITEM, goldPos)
+
+				# Quick check to see if there are items within a radius of 3 from the Agent's current position
+				# that are REACHABLE
+				locationDetails = (self.gameboard.LOCATION_RADIUS, self.gameboard.curr_position, 2)
+				locPosList = self.gameboard.getLocationPositions(locationDetails)
+
+				visibleItemPosList = [pos for pos in locPosList if (self.gameboard.getTile(pos) in gs.item_list)]
+				reachableItemPositions = [pos for pos in visibleItemPosList if self.isReachable(pos, self.gameboard.curr_position)]
+
+				# There are items that are visible AND reachable - pick closest one
+				if len(reachableItemPositions) > 0:
+					return (self.GOALTYPE_GET_ITEM, self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions))
+
+				# Obtain and process the FIRST target item (ie the one of highest importance when gold cannot yet be obtained)
+				targetItem = self.target_items[0]
+				itemPositions = self.gameboard.getItemPositions(targetItem)
+
+				# Target item(s) can be seen!
+				if len(itemPositions) > 0:
+
+					# Try to get the reachable positions of that item (taking stepping stone into account for reachability)
+					reachableItemPositions = \
+						[ itemPos for itemPos in itemPositions if self.isReachable(itemPos, self.gameboard, True)]
+
+					# Case when the item is reachable - select the closest one as the goal
+					if len(reachableItemPositions) > 0:
+						goalPos = self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions)
+						return (self.GOALTYPE_EXPLORE, goalPos)
+
+					# Case when item is not reachable - check for removable obstacles
+					else:
+						reachableFromGoal = self.getReachablePoints(itemPositions[0], self.gameboard)
+						boundaryObstacles = self.getPointsBoundary(reachableFromGoal)
+
+						# Case when there are removable obstacles to obtain the item
+
+				# Target item cannot be seen - explore
 				else:
 					return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
 
-			# Gold cannot be seen - explore
+			# SHOULD NOT REACH THIS, BUT JUST IN CASE!!
 			else:
-				explorePosition = self.getExplorePosition()
-				return (self.GOALTYPE_EXPLORE, explorePosition)
+				return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
 
 	# Return a 'most promising' position to reach on the map for the purpose
 	# of:
 	#	* expanding the map
 	#	* getting more detail about area around a specific position
+	# NOTE: Should NOT consider the use of the stepping stone for reachability
 	# NOTE: Should ALWAYS return a reachable position
 	def getExplorePosition(self, *targetPos):
 
 		finalExplorePosition = {}
 
 		# Get list of reachable positions from current position
-		reachablePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard)
+		reachablePoints = self.getReachablePoints(self.gameboard.curr_position, self.gameboard, False)
 
 		# DEBUGGING
 		print "Reachable points from current position:"
@@ -154,7 +200,8 @@ class DecisionMaker(object):
 
 			# Case when there are no reachable tiles that are adjacent to unknown tiles
 			# Find a tile within the reachable points that is located on the edge of the map
-			candidatePointsEdgeLoc = self.getPointsLoc(reachablePoints, self.gameboard.LOCATION_EDGE)
+			locationDetails = (self.gameboard.LOCATION_EDGE, 0)		# 0 is just a dummy value
+			candidatePointsEdgeLoc = self.getPointsLoc(reachablePoints, locationDetails)	# 
 			if len(candidatePointsEdgeLoc) > 0:
 				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsEdgeLoc)
 
@@ -180,11 +227,11 @@ class DecisionMaker(object):
 		else:
 			return self.gameboard.start_position
 
-	# Determine whether a position is reachable from a current position in the current map
-	# using the flood fill algorithm
-	def isReachable(self, pos, currPos):
-		reachablePoints = self.getReachablePoints(currPos, self.gameboard)
-		if self.pointExists(pos, reachablePoints):
+	# Determine whether a position is reachable from a start position in the current map
+	# using the flood fill algorithm.
+	def isReachable(self, goalPos, startPos, stepStoneFlag):
+		reachablePoints = self.getReachablePoints(startPos, self.gameboard, stepStoneFlag)
+		if self.pointExists(goalPos, reachablePoints):
 			return True
 		return False
 
@@ -199,10 +246,10 @@ class DecisionMaker(object):
 
 	# Given a list of positions on the map, determine which are the ones located 
 	# in a particular location on the map (type specified in gameboard)
-	def getPointsLoc(self, posList, loc):
+	def getPointsLoc(self, posList, locationDetails):
 		pointsLoc = []			# Holds the final return positions
 		for pos in posList:
-			if self.gameboard.located(pos, loc):
+			if self.gameboard.located(pos, locationDetails):
 				pointsLoc.append(pos)
 		return pointsLoc
 
@@ -256,6 +303,7 @@ class DecisionMaker(object):
 	# ----------------------------------
 	
 	# Perform A* search on current gameboard to determine list of actions to reach a given high level goal
+	# NOTE: Considers the usage of the stepping stone!
 	def getReachGoalActions(self, goal, gameboard):
 
 		# Parse the goal type and the position associated with the goal
@@ -332,61 +380,80 @@ class DecisionMaker(object):
 
 	# Perform flood fill algorithm over the map to determine a list of reachable points
 	# from a given start position.
-	# The 'target colour' is curently the blank tile.
-	def getReachablePoints(self, startPos, gameboard):
+	# stepStoneFlag: whether to consider the stepping stone for reachability (overcome water tiles)
+	def getReachablePoints(self, startPos, gameboard, stepStoneFlag):
 
 		# Final return list
 		reachablePoints = []	# Position given is assumed to be reachable
 
 		# For searching
-		pointsToProcess = []
+		nodesToProcess = []
 		directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.DIRECTION_DOWN, gameboard.DIRECTION_LEFT ]
 
-		# Begin flood fill algorithm
-		pointsToProcess.append(startPos)
-		while len(pointsToProcess) > 0:
-			processPoint = pointsToProcess.pop(0)
+		# Begin flood fill
+
+		# Create node with starting position
+		startNode = FloodFillNode(startPos, deepcopy(self.curr_items))
+		nodesToProcess.append(startNode)
+		while len(nodesToProcess) > 0:
+			processNode = nodesToProcess.pop(0)
 
 			# Check that point being considered is valid
-			if (gameboard.isValidPosition(processPoint)):
+			if (gameboard.isValidPosition(processNode.pos)):
 
-				if (gameboard.getTile(processPoint) in gs.player_icons) or \
-				   (self.isTargetColour(processPoint, gameboard)):
+				if (gameboard.getTile(processNode.pos) in gs.player_icons) or \
+				   (self.isTargetColour(processNode, gameboard, stepStoneFlag)):
 				   
-					reachablePoints.append(processPoint)
+					reachablePoints.append(processNode.pos)
 
 					# Construct the list of points that are from the four directions of process point
-					movedPoints = [ gameboard.movePoint(processPoint, direction) for direction in directionList ]
+					movedNodes = []
+					for direction in directionList:
+						newNode = FloodFillNode(gameboard.movePoint(processNode.pos, direction), deepcopy(processNode.items))
+						movedNodes.append(newNode)
 
-					# Consider each of the moved points with regard to the 'target colour'
-					for movedPoint in movedPoints:
+					# Add the new nodes to the queue
+					for movedNode in movedNodes:
 
 						# Add iff not: already processed, or to be processed
-						if (not self.pointExists(movedPoint, reachablePoints)) and \
-						(not self.pointExists(movedPoint, pointsToProcess)):
-							pointsToProcess.append(movedPoint)
+						if (not pointExists(movedNode.pos, reachablePoints)) and \
+						(not ffnodeExists(movedNode, nodesToProcess)):
+							nodesToProcess.append(movedNode)
 
-		return reachablePoints
+		# Return the final list of points
+		print "Final list of reachable points:"
+		print reachablePoints
+		gameboard.showMap()
 
-	# Determine whether a position is of 'target colour' ie reachable
-	def isTargetColour(self, pos, gameboard):
-		tile = gameboard.getTile(pos)
-		if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
-			return True
-		elif (tile in gs.item_list):
-			return True
-		elif (tile == gs.TILE_TREE):
-			# Check for axe in possession
-			if (gs.TILE_AXE in self.curr_items):
+		# Determine whether a given flood fill node is reachable
+		# with the its current conditions
+		# stepStoneFlag: whether to consider stepping stone for reachabilty
+		def isTargetColour(ffNode, gameboard, stepStoneFlag):
+			tile = gameboard.getTile(ffNode.pos)
+			if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
 				return True
-		elif (tile == gs.TILE_DOOR):
-			# Check for key in possession
-			if (gs.TILE_KEY in self.curr_items):
+			elif (tile in gs.item_list):
 				return True
+			elif (tile == gs.TILE_TREE):
+				# Check for axe in possession
+				if (gs.TILE_AXE in ffNode.items):
+					return True
+			elif (tile == gs.TILE_DOOR):
+				# Check for key in possession
+				if (gs.TILE_KEY in ffNode.items):
+					return True
 
-		# All other cases:
-		else:
-			return False
+			if stepStoneFlag:
+				if (tile == gs.TILE_WATER):
+					# Check whether there is a stepping stone in the item list
+					if (gs.TILE_STEPPING_STONE in ffNode.items):
+						# Remove one of the stepping stones, and return true
+						ffNode.items.remove(gs.TILE_STEPPING_STONE)
+						return True
+
+			# All other cases:
+			else:
+				return False
 
 	# Compare two position points for equivalence
 	# Both positions are given as points, in the format:
