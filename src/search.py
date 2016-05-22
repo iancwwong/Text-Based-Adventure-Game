@@ -4,6 +4,7 @@ from Queue import PriorityQueue
 import GameSymbols as gs
 from Gameboard import Gameboard
 from MoveValidator import MoveValidator
+from FloodFillNode import FloodFillNode
 from copy import deepcopy
 import sys
 
@@ -292,8 +293,6 @@ def pointExists(givenPos, posList):
 	for pos in posList:
 		if equalPosition(pos, givenPos):
 			return True
-	print "Position %s not found in list with elements:'"% str(givenPos)
-	print posList
 	return False
 
 # Check for equivalence between virtual gameboards
@@ -326,6 +325,57 @@ def equalVGameboards(vgameboard1, vgameboard2):
 				return False
 	return True
 
+#############################################################
+# Check whether a given floodFill node is in a list of floodFillNodes
+def ffnodeExists(givenNode, nodeList):
+	for node in nodeList:
+		if equalFFNodes(givenNode, node):
+			return True
+	return False
+
+# Check equivalence between two floodfill nodes
+def equalFFNodes(node1, node2):
+	# Check the position
+	if not equalPosition(node1.pos, node2.pos):
+		return False
+
+	# Check the items
+	if not (set(node1.items) == set(node2.items)):
+		return False
+
+	# Everything is identical
+	return True
+
+# Determine whether a given flood fill node is reachable
+# with the its current conditions
+# stepSteonFlag: whether to consider stepping stone for reachabilty
+def isTargetColour(ffNode, gameboard, stepStoneFlag):
+	tile = gameboard.getTile(ffNode.pos)
+	if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
+		return True
+	elif (tile in gs.item_list):
+		return True
+	elif (tile == gs.TILE_TREE):
+		# Check for axe in possession
+		if (gs.TILE_AXE in ffNode.items):
+			return True
+	elif (tile == gs.TILE_DOOR):
+		# Check for key in possession
+		if (gs.TILE_KEY in ffNode.items):
+			return True
+
+	if stepStoneFlag:
+		if (tile == gs.TILE_WATER):
+			# Check whether there is a stepping stone in the item list
+			if (gs.TILE_STEPPING_STONE in ffNode.items):
+				# Remove one of the stepping stones, and return true
+				ffNode.items.remove(gs.TILE_STEPPING_STONE)
+				return True
+
+	# All other cases:
+	else:
+		return False
+
 # -------------------------------
 # main
 # -------------------------------
@@ -335,30 +385,26 @@ def equalVGameboards(vgameboard1, vgameboard2):
 # Gameboard is a list of lists
 gameboard = Gameboard()
 gameboard.gamemap = []
-map_row0 = ['.', '.', '.', '.', '.', '.', '.']
-map_row1 = ['.', ' ', ' ', 'g', ' ', ' ', '.']
-map_row2 = ['.', ' ', '*', ' ', ' ', ' ', '.']
-map_row3 = ['.', ' ', '*', '*', '*', ' ', '.']
-map_row4 = ['.', ' ', '~', '<', ' ', ' ', '.']
-map_row5 = ['.', '.', '.', '.', '.', '.', '.']
+map_row0 = [' ', '~', '~', '~']
+map_row1 = [' ', '*', 'g', '*']
+map_row2 = [' ', '*', '*', '*']
+map_row3 = [' ', ' ', ' ', ' ']
 gameboard.gamemap.append(map_row0)
 gameboard.gamemap.append(map_row1)
 gameboard.gamemap.append(map_row2)
 gameboard.gamemap.append(map_row3)
-gameboard.gamemap.append(map_row4)
-gameboard.gamemap.append(map_row5)
 
 # Set current position
-gameboard.curr_position = { 'x': 3, 'y': 4 }
+gameboard.curr_position = { 'x': 0, 'y': 3 }
 
 # Set direction
 gameboard.direction = Gameboard.DIRECTION_LEFT
 
 # Assume jason has created
-goal = { 'x' : 3, 'y' : 1 }
+goal = { 'x' : 2, 'y' : 1 }
 
 # What we know from decisionmaker:
-curr_items = []
+curr_items = ['o']
 
 # --------------------------------
 # BEGIN SEARCH FOR LIST OF ACTIONS
@@ -436,26 +482,38 @@ startPos = gameboard.curr_position
 reachablePoints = []	# Position given is assumed to be reachable
 
 # For searching
-pointsToProcess = []
+nodesToProcess = []
 directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.DIRECTION_DOWN, gameboard.DIRECTION_LEFT ]
 
 # Begin flood fill
-pointsToProcess.append(startPos)
-while len(pointsToProcess) > 0:
-	processPoint = pointsToProcess.pop(0)
 
-	if (gameboard.getTile(processPoint) in gs.player_icons) or \
-	(gameboard.isValidPosition(processPoint) and (gameboard.getTile(processPoint) == gs.TILE_BLANK)):
+# Create node with starting position
+startNode = FloodFillNode(startPos, curr_items)
+nodesToProcess.append(startNode)
+while len(nodesToProcess) > 0:
+	processNode = nodesToProcess.pop(0)
 
-		reachablePoints.append(processPoint)
+	# Check that point being considered is valid
+	if (gameboard.isValidPosition(processNode.pos)):
 
-		# Construct the list of points that are from the four directions of process point
-		movedPoints = [ gameboard.movePoint(processPoint, direction) for direction in directionList ]
+		if (gameboard.getTile(processNode.pos) in gs.player_icons) or \
+		   (isTargetColour(processNode, gameboard, False)):
+		   
+			reachablePoints.append(processNode.pos)
 
-		# Consider each of the moved points with regard to the 'target colour'
-		for movedPoint in movedPoints:
-			if not pointExists(movedPoint, reachablePoints):
-				pointsToProcess.append(movedPoint)
+			# Construct the list of points that are from the four directions of process point
+			movedNodes = []
+			for direction in directionList:
+				newNode = FloodFillNode(gameboard.movePoint(processNode.pos, direction), processNode.items)
+				movedNodes.append(newNode)
+
+			# Add the new nodes to the queue
+			for movedNode in movedNodes:
+
+				# Add iff not: already processed, or to be processed
+				if (not pointExists(movedNode.pos, reachablePoints)) and \
+				(not ffnodeExists(movedNode, nodesToProcess)):
+					nodesToProcess.append(movedNode)
 
 # Return the final list of points
 print "Final list of reachable points:"
