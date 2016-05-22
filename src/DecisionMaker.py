@@ -23,8 +23,8 @@ class DecisionMaker(object):
 	# High Level Goal types
 	GOALTYPE_REACH = 1
 	GOALTYPE_GET_ITEM = 2
-	GOALTYPE_EXPLORE = 3
-	GOALTYPE_ELIMINATE_OBSTACLE = 4
+	GOALTYPE_GET_TARGET_ITEM = 3
+	GOALTYPE_EXPLORE = 4
 
 	# Attributes
 	past_actions = []		# a list of past actions (consisting of single chars)
@@ -76,7 +76,12 @@ class DecisionMaker(object):
 		print "Current goal: %s" % str(goal)
 
 		# Perform a search on the current gameboard to determine the list of actions
-		newActions = self.getReachGoalActions(goal, self.gameboard)
+		# Case when exploring: do NOT use stepping stone
+		goalType, goalPos = goal
+		if goalType == self.GOALTYPE_GET_TARGET_ITEM:
+			newActions = self.getReachGoalActions(goal, self.gameboard, True)
+		else:
+			newActions = self.getReachGoalActions(goal, self.gameboard, False)
 
 		# DEBUGGING
 		sys.stdout.write("Goal: ")
@@ -127,7 +132,7 @@ class DecisionMaker(object):
 				if len(self.gameboard.getItemPositions(gs.TILE_GOLD)) > 0:
 					goldPos = self.gameboard.getItemPositions(gs.TILE_GOLD)[0]
 					if self.isReachable(goldPos, self.gameboard.curr_position, True):
-						return (self.GOALTYPE_GET_ITEM, goldPos)
+						return (self.GOALTYPE_GET_TARGET_ITEM, goldPos)
 
 				# Quick check to see if there are items within a radius of 3 from the Agent's current position
 				# that are REACHABLE. If so, get it!
@@ -155,7 +160,7 @@ class DecisionMaker(object):
 						# Case when the item is reachable - select the closest one as the goal
 						if len(reachableItemPositions) > 0:
 							goalPos = self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions)
-							return (self.GOALTYPE_EXPLORE, goalPos)
+							return (self.GOALTYPE_GET_TARGET_ITEM, goalPos)
 
 						# Case when item is not reachable - check for removable obstacles from the target item
 						else:
@@ -188,6 +193,8 @@ class DecisionMaker(object):
 					# Target item cannot be seen - explore
 					else:
 						return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
+
+					print "inifinite loop lol"
 
 			# SHOULD NOT REACH THIS, BUT JUST IN CASE!!
 			else:
@@ -352,8 +359,8 @@ class DecisionMaker(object):
 	# ----------------------------------
 	
 	# Perform A* search on current gameboard to determine list of actions to reach a given high level goal
-	# NOTE: Considers the usage of the stepping stone!
-	def getReachGoalActions(self, goal, gameboard):
+	# stepStoneFlag: whether to take into account using stepping stone(s) to reach a goal
+	def getReachGoalActions(self, goal, gameboard, stepStoneFlag):
 
 		# Parse the goal type and the position associated with the goal
 		goalType, goalPos = goal
@@ -405,7 +412,7 @@ class DecisionMaker(object):
 			else:
 	
 				# Determine list of possible actions from the simulated situation
-				possible_actions = self.mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap)
+				possible_actions = self.mv.getAllValidMoves(node.vgameboard.items, node.vgameboard.gamemap, stepStoneFlag)
 
 				#print "Possible actions:"
 				#print possible_actions

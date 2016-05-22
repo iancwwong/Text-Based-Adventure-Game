@@ -11,7 +11,8 @@ class MoveValidator(object):
 
 	# Given a game map in the form of a list of lists,
 	# check if a given move is valid
-	def isValid(self, action, curr_items, gamemap):
+	# stepStoneFlag: whether to take into account using stepping stone(s) to reach a goal
+	def isValid(self, action, curr_items, gamemap, stepStoneFlag):
 		if action == gs.ACTION_RIGHT:
 			return True
 		if action == gs.ACTION_LEFT:
@@ -36,7 +37,9 @@ class MoveValidator(object):
 			# Check possiblity of each action
 			if(action == gs.ACTION_FORWARD):
 				if gamemap[y][x] == gs.TILE_WATER:
-					if(gs.TILE_STEPPING_STONE not in curr_items):
+					if (stepStoneFlag) and (gs.TILE_STEPPING_STONE in curr_items):
+						return True
+					else:
 						return False
 				elif gamemap[y][x] == gs.TILE_DOOR:
 					return False
@@ -72,8 +75,9 @@ class MoveValidator(object):
 
 	# Given a game map in the form of a list of lists,
 	# return ALL valid moves
-	def getAllValidMoves(self, curr_items, gamemap):
-		return [a for a in gs.action_list if self.isValid(a, curr_items, gamemap)]
+	# stepStoneFlag: whether to take into account using stepping stone(s) to reach a goal
+	def getAllValidMoves(self, curr_items, gamemap, stepStoneFlag):
+		return [a for a in gs.action_list if self.isValid(a, curr_items, gamemap, stepStoneFlag)]
 
 	# ---------------------------
 	# HELPER FUNCTIONS
