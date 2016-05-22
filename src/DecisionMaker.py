@@ -181,11 +181,8 @@ class DecisionMaker(object):
 									elif obstacle == gs.TILE_DOOR:
 										self.target_items.insert(0, gs.TILE_KEY)
 									elif obstacle == gs.TILE_WATER:
-										self.target_items.insert(0, gs.TILE_STEPPING_STONE)
-							#print "%s can be reachable if the following obstacles are removed: %s" % (targetItem, str(removableObstacles))
-							#exit()
-								
-							continue
+										self.target_items.insert(0, gs.TILE_STEPPING_STONE)								
+								continue
 
 							# No removable items to reach target item - continue exploring
 							return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
@@ -193,8 +190,6 @@ class DecisionMaker(object):
 					# Target item cannot be seen - explore
 					else:
 						return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
-
-					print "inifinite loop lol"
 
 			# SHOULD NOT REACH THIS, BUT JUST IN CASE!!
 			else:
