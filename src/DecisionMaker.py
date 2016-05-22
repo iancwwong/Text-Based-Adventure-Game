@@ -130,43 +130,61 @@ class DecisionMaker(object):
 						return (self.GOALTYPE_GET_ITEM, goldPos)
 
 				# Quick check to see if there are items within a radius of 3 from the Agent's current position
-				# that are REACHABLE
+				# that are REACHABLE. If so, get it!
 				locationDetails = (self.gameboard.LOCATION_RADIUS, self.gameboard.curr_position, 2)
 				locPosList = self.gameboard.getLocationPositions(locationDetails)
-
 				visibleItemPosList = [pos for pos in locPosList if (self.gameboard.getTile(pos) in gs.item_list)]
-				reachableItemPositions = [pos for pos in visibleItemPosList if self.isReachable(pos, self.gameboard.curr_position)]
-
-				# There are items that are visible AND reachable - pick closest one
+				reachableItemPositions = [pos for pos in visibleItemPosList if self.isReachable(pos, self.gameboard.curr_position, False)]
 				if len(reachableItemPositions) > 0:
 					return (self.GOALTYPE_GET_ITEM, self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions))
 
-				# Obtain and process the FIRST target item (ie the one of highest importance when gold cannot yet be obtained)
-				targetItem = self.target_items[0]
-				itemPositions = self.gameboard.getItemPositions(targetItem)
+				# while a goal hasn't been determined, continue processing the target items
+				while True:
 
-				# Target item(s) can be seen!
-				if len(itemPositions) > 0:
+					# Obtain and process the FIRST target item (ie the one of highest importance when gold cannot yet be obtained)
+					targetItem = self.target_items[0]
+					itemPositions = self.gameboard.getItemPositions(targetItem)
 
-					# Try to get the reachable positions of that item (taking stepping stone into account for reachability)
-					reachableItemPositions = \
-						[ itemPos for itemPos in itemPositions if self.isReachable(itemPos, self.gameboard, True)]
+					# Target item(s) can be seen!
+					if len(itemPositions) > 0:
 
-					# Case when the item is reachable - select the closest one as the goal
-					if len(reachableItemPositions) > 0:
-						goalPos = self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions)
-						return (self.GOALTYPE_EXPLORE, goalPos)
+						# Try to get the reachable positions of that item (taking stepping stone into account for reachability)
+						reachableItemPositions = \
+							[ itemPos for itemPos in itemPositions if self.isReachable(itemPos, self.gameboard, True)]
 
-					# Case when item is not reachable - check for removable obstacles
+						# Case when the item is reachable - select the closest one as the goal
+						if len(reachableItemPositions) > 0:
+							goalPos = self.getClosestPosition(self.gameboard.curr_position, reachableItemPositions)
+							return (self.GOALTYPE_EXPLORE, goalPos)
+
+						# Case when item is not reachable - check for removable obstacles from the target item
+						else:
+							
+							# For now, choose the first location of the item
+							itemPos = itemPositions[0]
+
+							# Get the removable obstacles around that itemPos
+							removableObstacles = self.getRemovableObstacles(itemPos)
+
+							# Case when there are removable obstacles to obtain the item - set target item appropriately
+							# ie add the appropriate item to remove that obstacle at the HEAD of target_items
+							# Note: At this point, we ASSUME the appropriate item to remove obstacle is NOT in our possession
+							if len(removableObstacles) > 0:
+								for obstacle in removableObstacles:
+									if obstacle == gs.TILE_TREE:
+										self.target_items.insert(0, gs.TILE_AXE)
+									elif obstacle == gs.TILE_DOOR:
+										self.target_items.insert(0, gs.TILE_KEY)
+									elif obstacle == gs.TILE_WATER:
+										self.target_items.insert(0, gs.TILE_STEPPING_STONE)
+								continue
+
+							# No removable items to reach target item - continue exploring
+							return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
+
+					# Target item cannot be seen - explore
 					else:
-						reachableFromGoal = self.getReachablePoints(itemPositions[0], self.gameboard)
-						boundaryObstacles = self.getPointsBoundary(reachableFromGoal)
-
-						# Case when there are removable obstacles to obtain the item
-
-				# Target item cannot be seen - explore
-				else:
-					return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
+						return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
 
 			# SHOULD NOT REACH THIS, BUT JUST IN CASE!!
 			else:
@@ -296,7 +314,36 @@ class DecisionMaker(object):
 				minDist = dist
 				closestPos = pos
 		return closestPos	
-	
+
+	# Given a position, return a list of all the obstacles that must be removed to allow
+	# reachability to the given position
+	def getRemovableObstacles(self, pos):
+
+		# Holds the obstacles
+		obstacleList = []
+
+		# Get the boundary-reachable positions from the given position
+		reachablePositions = self.getReachablePoints(pos, self.gameboard, True)
+		boundaryPositions = self.getPointsBoundary(reachablePositions)	# Note: At this point, water tiles CAN be considered to be an obstacle
+
+		# Construct the list of all the valid adjacent positions from those boundary-reachable positions
+		allAdjPositions = []
+		for boundaryPos in boundaryPositions:
+			adjPositions = self.gameboard.getAdjacentSquares(boundaryPos)
+			for adjPos in adjPositions:
+				if not self.pointExists(adjPos, allAdjPositions):
+					allAdjPositions.append(adjPos)
+
+		# Loop through each tile type of all the adjacent positions of boundary positions,
+		# and adding to the obstacle list (without duplicates)
+		allAdjTileTypes = [ self.gameboard.getTile(adjPos) for adjPos in allAdjPositions ]
+		for tileType in allAdjTileTypes:
+			if (tileType == gs.TILE_TREE) or (tileType == gs.TILE_DOOR) or (tileType == gs.TILE_WATER):
+				if not (tileType in obstacleList):
+					obstacleList.append(tileType)
+
+		# Return result
+		return obstacleList	
 
 	# ----------------------------------
 	# NODE SEARCHING FUNCTIONS
@@ -368,7 +415,7 @@ class DecisionMaker(object):
 					newNode = SearchNode(tempvgameboard, action, node)
 
 					# Put iff newNode doesn't currently exist in list of nodes
-					if self.exists(newNode, node_list):
+					if self.astarNodeExists(newNode, node_list):
 						""" Ignore """
 					else:
 						nodepq.put(newNode, newNode.eval_cost)
@@ -377,6 +424,46 @@ class DecisionMaker(object):
 		# DEBUGGING
 		print "Darn, no path was found."
 		return []
+
+	# Check whether an A* search node is in a list of A* search nodes (equivalence)
+	def astarNodeExists(self, searchNode, nodeList):
+		for node in nodeList:
+			if self.equalVGameboards(node.vgameboard, searchNode.vgameboard):
+				return True
+		return False
+
+	# Check for equivalence between virtual gameboards
+	def equalVGameboards(self, vgameboard1, vgameboard2):
+
+		# Direction
+		if vgameboard1.direction != vgameboard2.direction:
+			return False
+
+		# Current position
+		if not self.equalPosition(vgameboard1.curr_position, vgameboard2.curr_position):
+			return False
+
+		# Goal position
+		if not self.equalPosition(vgameboard1.goal_position, vgameboard2.goal_position):
+			return False
+
+		# Item list
+		if not (set(vgameboard1.items) == set(vgameboard2.items)):
+			return False
+	
+		# Gamemap
+		if (len(vgameboard1.gamemap) != len(vgameboard2.gamemap)) or \
+		   (len(vgameboard1.gamemap[0]) != len(vgameboard2.gamemap[0])):
+			return False
+
+		for i in range(0, len(vgameboard1.gamemap)):
+			for j in range(0, len(vgameboard1.gamemap[i])):
+				try:
+					if (vgameboard1.gamemap[i][j] != vgameboard2.gamemap[i][j]):
+						return False
+				except IndexError:
+					print "Error: Index i=%d j=%d not found." % (i,j)
+		return True
 
 	# Perform flood fill algorithm over the map to determine a list of reachable points
 	# from a given start position.
@@ -416,57 +503,67 @@ class DecisionMaker(object):
 					for movedNode in movedNodes:
 
 						# Add iff not: already processed, or to be processed
-						if (not pointExists(movedNode.pos, reachablePoints)) and \
-						(not ffnodeExists(movedNode, nodesToProcess)):
+						if (not self.pointExists(movedNode.pos, reachablePoints)) and \
+						(not self.ffnodeExists(movedNode, nodesToProcess)):
 							nodesToProcess.append(movedNode)
 
 		# Return the final list of points
-		print "Final list of reachable points:"
-		print reachablePoints
-		gameboard.showMap()
+		return reachablePoints
 
-		# Determine whether a given flood fill node is reachable
-		# with the its current conditions
-		# stepStoneFlag: whether to consider stepping stone for reachabilty
-		def isTargetColour(ffNode, gameboard, stepStoneFlag):
-			tile = gameboard.getTile(ffNode.pos)
-			if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
+	# Determine whether a given flood fill node is reachable
+	# with the its current conditions
+	# stepStoneFlag: whether to consider stepping stone for reachabilty
+	def isTargetColour(self, ffNode, gameboard, stepStoneFlag):
+		tile = gameboard.getTile(ffNode.pos)
+		if (tile == gs.TILE_BLANK) or (tile == gs.TILE_USED_STEPPING_STONE):
+			return True
+		elif (tile in gs.item_list):
+			return True
+		elif (tile == gs.TILE_TREE):
+			# Check for axe in possession
+			if (gs.TILE_AXE in ffNode.items):
 				return True
-			elif (tile in gs.item_list):
+		elif (tile == gs.TILE_DOOR):
+			# Check for key in possession
+			if (gs.TILE_KEY in ffNode.items):
 				return True
-			elif (tile == gs.TILE_TREE):
-				# Check for axe in possession
-				if (gs.TILE_AXE in ffNode.items):
-					return True
-			elif (tile == gs.TILE_DOOR):
-				# Check for key in possession
-				if (gs.TILE_KEY in ffNode.items):
+
+		if stepStoneFlag:
+			if (tile == gs.TILE_WATER):
+				# Check whether there is a stepping stone in the item list
+				if (gs.TILE_STEPPING_STONE in ffNode.items):
+					# Remove one of the stepping stones, and return true
+					ffNode.items.remove(gs.TILE_STEPPING_STONE)
 					return True
 
-			if stepStoneFlag:
-				if (tile == gs.TILE_WATER):
-					# Check whether there is a stepping stone in the item list
-					if (gs.TILE_STEPPING_STONE in ffNode.items):
-						# Remove one of the stepping stones, and return true
-						ffNode.items.remove(gs.TILE_STEPPING_STONE)
-						return True
+		# All other cases:
+		else:
+			return False
 
-			# All other cases:
-			else:
-				return False
+	def ffnodeExists(self, givenNode, nodeList):
+		for node in nodeList:
+			if self.equalFFNodes(givenNode, node):
+				return True
+		return False
+
+	# Check equivalence between two floodfill nodes
+	def equalFFNodes(self, node1, node2):
+		# Check the position
+		if not self.equalPosition(node1.pos, node2.pos):
+			return False
+
+		# Check the items
+		if not (set(node1.items) == set(node2.items)):
+			return False
+
+		# Everything is identical
+		return True
 
 	# Compare two position points for equivalence
 	# Both positions are given as points, in the format:
 	# 	pos = { 'x': X, 'y': Y }
 	def equalPosition(self, pos1, pos2):
 		return ( (pos1['x'] == pos2['x']) and (pos1['y'] == pos2['y']) )
-
-	# Check whether a search node is in a list of search nodes (equivalence)
-	def exists(self, searchNode, nodeList):
-		for node in nodeList:
-			if self.equalVGameboards(node.vgameboard, searchNode.vgameboard):
-				return True
-		return False
 
 	# Check whether a position exists in a list of positions
 	# where position is of the format:
@@ -476,40 +573,6 @@ class DecisionMaker(object):
 			if self.equalPosition(pos, givenPos):
 				return True
 		return False
-
-	# Check for equivalence between virtual gameboards
-	def equalVGameboards(self, vgameboard1, vgameboard2):
-
-		# Direction
-		if vgameboard1.direction != vgameboard2.direction:
-			return False
-
-		# Current position
-		if not self.equalPosition(vgameboard1.curr_position, vgameboard2.curr_position):
-			return False
-
-		# Goal position
-		if not self.equalPosition(vgameboard1.goal_position, vgameboard2.goal_position):
-			return False
-
-		# Item list
-		if not (set(vgameboard1.items) == set(vgameboard2.items)):
-			return False
-	
-		# Gamemap
-		if (len(vgameboard1.gamemap) != len(vgameboard2.gamemap)) or \
-		   (len(vgameboard1.gamemap[0]) != len(vgameboard2.gamemap[0])):
-			return False
-
-		for i in range(0, len(vgameboard1.gamemap)):
-			for j in range(0, len(vgameboard1.gamemap[i])):
-				try:
-					if (vgameboard1.gamemap[i][j] != vgameboard2.gamemap[i][j]):
-						return False
-				except IndexError:
-					print "Error: Index i=%d j=%d not found." % (i,j)
-		return True
-
 
 # ----------------------------------
 # SEARCH HELPER CLASSES
