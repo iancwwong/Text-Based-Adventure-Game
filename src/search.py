@@ -404,7 +404,7 @@ gameboard.direction = Gameboard.DIRECTION_LEFT
 goal = { 'x' : 2, 'y' : 1 }
 
 # What we know from decisionmaker:
-curr_items = ['o']
+curr_items = ['o', 'o']
 
 # --------------------------------
 # BEGIN SEARCH FOR LIST OF ACTIONS
@@ -488,7 +488,7 @@ directionList = [ gameboard.DIRECTION_UP, gameboard.DIRECTION_RIGHT, gameboard.D
 # Begin flood fill
 
 # Create node with starting position
-startNode = FloodFillNode(startPos, curr_items)
+startNode = FloodFillNode(startPos, deepcopy(curr_items))
 nodesToProcess.append(startNode)
 while len(nodesToProcess) > 0:
 	processNode = nodesToProcess.pop(0)
@@ -497,14 +497,14 @@ while len(nodesToProcess) > 0:
 	if (gameboard.isValidPosition(processNode.pos)):
 
 		if (gameboard.getTile(processNode.pos) in gs.player_icons) or \
-		   (isTargetColour(processNode, gameboard, False)):
+		   (isTargetColour(processNode, gameboard, True)):
 		   
 			reachablePoints.append(processNode.pos)
 
 			# Construct the list of points that are from the four directions of process point
 			movedNodes = []
 			for direction in directionList:
-				newNode = FloodFillNode(gameboard.movePoint(processNode.pos, direction), processNode.items)
+				newNode = FloodFillNode(gameboard.movePoint(processNode.pos, direction), deepcopy(processNode.items))
 				movedNodes.append(newNode)
 
 			# Add the new nodes to the queue
