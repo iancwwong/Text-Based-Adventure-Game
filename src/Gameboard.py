@@ -349,8 +349,6 @@ class Gameboard(object):
 				# around the particular position
 				topLeftPos = { 'x': pos['x'] - radius,  'y': pos['y'] - radius }
 				bottomRightPos = { 'x': pos['x'] + radius,  'y': pos['y'] + radius }
-				print "Top left: %s" % str(topLeftPos)
-				print "Bottom right: %s" % str(bottomRightPos)
 				for row in range(topLeftPos['y'], bottomRightPos['y']+1):	# range - exclusive of last end point
 					if self.isValidRow(row):
 						for col in range(topLeftPos['x'], bottomRightPos['x']+1):
