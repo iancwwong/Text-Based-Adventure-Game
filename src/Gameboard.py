@@ -287,13 +287,13 @@ class Gameboard(object):
 
 	# return whether a row value is valid on the map
 	def isValidRow(self, rowNum):
-		if (rowNum > 0 and rowNum < self.numRows()):
+		if (rowNum >= 0 and rowNum < self.numRows()):
 			return True
 		return False
 
 	# return whether a column value is valid on the map
 	def isValidColumn(self, colNum):
-		if (colNum > 0 and colNum < self.numCols()):
+		if (colNum >= 0 and colNum < self.numCols()):
 			return True
 		return False
 
@@ -349,6 +349,8 @@ class Gameboard(object):
 				# around the particular position
 				topLeftPos = { 'x': pos['x'] - radius,  'y': pos['y'] - radius }
 				bottomRightPos = { 'x': pos['x'] + radius,  'y': pos['y'] + radius }
+				print "Top left: %s" % str(topLeftPos)
+				print "Bottom right: %s" % str(bottomRightPos)
 				for row in range(topLeftPos['y'], bottomRightPos['y']+1):	# range - exclusive of last end point
 					if self.isValidRow(row):
 						for col in range(topLeftPos['x'], bottomRightPos['x']+1):
@@ -385,7 +387,7 @@ class Gameboard(object):
 
 	# Given a specific item to look for, find all the positions where the item is located
 	# returned as a list
-	def getItemPosition(self, itemToGet):
+	def getItemPositions(self, itemToGet):
 		itemPosList = []
 		for i in range(0, self.numRows()):
 			for j in range(0, self.numCols()):
