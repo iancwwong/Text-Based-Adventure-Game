@@ -150,7 +150,7 @@ class DecisionMaker(object):
 
 						# Try to get the reachable positions of that item (taking stepping stone into account for reachability)
 						reachableItemPositions = \
-							[ itemPos for itemPos in itemPositions if self.isReachable(itemPos, self.gameboard, True)]
+							[ itemPos for itemPos in itemPositions if self.isReachable(itemPos, self.gameboard.curr_position, True)]
 
 						# Case when the item is reachable - select the closest one as the goal
 						if len(reachableItemPositions) > 0:
@@ -177,7 +177,10 @@ class DecisionMaker(object):
 										self.target_items.insert(0, gs.TILE_KEY)
 									elif obstacle == gs.TILE_WATER:
 										self.target_items.insert(0, gs.TILE_STEPPING_STONE)
-								continue
+							#print "%s can be reachable if the following obstacles are removed: %s" % (targetItem, str(removableObstacles))
+							#exit()
+								
+							continue
 
 							# No removable items to reach target item - continue exploring
 							return (self.GOALTYPE_EXPLORE, self.getExplorePosition())
@@ -224,14 +227,11 @@ class DecisionMaker(object):
 				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsEdgeLoc)
 
 			# At this point, there are no tiles with adj unknown tiles, and blank squares on edge of map.
-			# Choose a random boundary-reachable point
+			# Choose the closest one
 			# Note: There should ALWAYS be one
 			candidatePointsBoundary = self.getPointsBoundary(reachablePoints)
 			if len(candidatePointsBoundary) > 0:
-				finalExplorePosition = candidatePointsBoundary[random.randint(0,len(candidatePointsBoundary)-1)]
-				while self.equalPosition(finalExplorePosition, self.gameboard.curr_position):
-					finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
-				return finalExplorePosition
+				return self.getClosestPosition(self.gameboard.curr_position, candidatePointsBoundary)
 
 			# For some reason, ended up here where above cases are not possible: Pick a random position
 			finalExplorePosition = reachablePoints[random.randint(0,len(reachablePoints)-1)]
@@ -338,9 +338,11 @@ class DecisionMaker(object):
 		# and adding to the obstacle list (without duplicates)
 		allAdjTileTypes = [ self.gameboard.getTile(adjPos) for adjPos in allAdjPositions ]
 		for tileType in allAdjTileTypes:
-			if (tileType == gs.TILE_TREE) or (tileType == gs.TILE_DOOR) or (tileType == gs.TILE_WATER):
+			if (tileType == gs.TILE_TREE) or (tileType == gs.TILE_DOOR):
 				if not (tileType in obstacleList):
 					obstacleList.append(tileType)
+			elif (tileType == gs.TILE_WATER):
+				obstacleList.append(tileType)
 
 		# Return result
 		return obstacleList	
