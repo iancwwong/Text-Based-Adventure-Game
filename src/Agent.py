@@ -9,6 +9,20 @@
 #  Date: 26/04/2016
 # -------------------------------------------------------
 
+# The agent for this game is a game playing agent that uses a world model and decision making module to develop a strategy 
+# to obtain the gold. The decision making module works based off goals - it determines goals (based off a basic decision making 
+# flowchart involving different goal priorities such as getting the gold, and general exploration), and determines the list of 
+# actions to reach that goal.
+
+# Determining the goal involves the use of the 'flood fill' algorithm to determine reachable positions (considering the items). 
+# Finding a path to the goal involves the use of 'A*' to find the series of actions that allows the agent to reach the goal, 
+# which are submitted one by one to the game engine.
+# We made a series of changes to the way the agent explores the map. Orginally, we attempted to use A* to check for reachability.
+# However as the map became more complex, we found A* to be too slow. We then proceeded to use the flood-fill algorithm, which ended
+# up being much more efficient. We also have a 'moveValidator', which is meant to be a general purpose (python) class that determines
+# the validity of a move, given a particular map environment (to avoid recoding the rules in all other classes that may require move 
+# validation).
+
 import socket
 from sys import argv
 from Gameboard import Gameboard
